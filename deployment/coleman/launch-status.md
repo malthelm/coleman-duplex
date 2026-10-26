@@ -48,3 +48,9 @@ Current direction remains **direct booking first, platforms undecided, private W
 ### Rental-workflow update — 2026-10-26
 
 The application/runtime statements in the earlier audit above are superseded by feature release `383f4a7` and its form/mobile polish. Fuller applications, private lease/move-in records, manual rent tracking and maintenance are now implemented and live-tested on Winona. See [tenancy-records.md](tenancy-records.md) for operation, verification and recovery. This adds no public exposure, real payment processing, screening, signing provider or outgoing messaging. The existing launch dependencies and off-host restoration limitation remain.
+
+### Current-version recovery and demo handoff — 2026-10-26
+
+Deployed revision `52b195f` was verified against the Dokploy checkout. A fresh backup of this version passed an isolated restore, rollback to `01339e5`, and return to `52b195f`, preserving all eight business/history tables and both private attachments. Current rental pages and authenticated downloads passed HTTP checks after return. See [restore-runbook.md](restore-runbook.md) for the evidence and boundaries; off-host recovery and the public launch are still pending.
+
+Subsequent user-requested browser handoff signed into the native host dashboard and the demo resident portal. CA-00002 was reopened for application editing and its portal access enabled for testing. The resident submitted maintenance request #2, “DEMO — Kitchen faucet dripping”; tenant-side saved/open state was verified. It was left unanswered for Malthe to try responding. Browser navigation to the host maintenance view was blocked, so host-browser display/response acceptance is not claimed. Earlier statements that every demo portal grant was revoked and every request resolved describe the pre-handoff audit, not the current demo state.

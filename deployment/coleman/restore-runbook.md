@@ -1,5 +1,24 @@
 # Private backup, restore and rollback
 
+## Rental-feature rehearsal — 2026-10-26
+
+A fresh snapshot of deployed `52b195f2abffc16f12be1f24a190f82313f16c23` was restored in the separate Dokploy stack `coleman-restore-jlyji2`. The database matched byte for byte before startup; the non-cache site-file manifest matched, including private rental attachments. The rehearsal had no published ports and only an internal Docker network.
+
+The restored copy passed native host authentication, guest pages, calendar/settings/message views, applications and all four rental sections. Its PDF and maintenance-photo downloads worked through authenticated forms; direct HTTP access to the private storage directory returned 403. The anonymous resident portal required sign-in. A new guest request saved successfully in this isolated copy only.
+
+Rollback to the retained `01339e5` image and return to `52b195f` preserved exact fingerprints for all eight Coleman business/history tables and both private attachments. Both attachments retained 0600 permissions. The older image hides the rental features; this check proves data preservation across these specific versions, not that residents can continue using those features during rollback. The current version's HTTP checks passed again after returning.
+
+Private evidence:
+
+- Snapshot: `/home/winona/coleman-duplex/private/backups/tenant-recovery-20261026/`
+- State, before/after fingerprints and final HTTP report: `/home/winona/coleman-duplex/private/restores/tenant-recovery-20261026/`
+
+Both rehearsal containers were stopped through Dokploy after verification (exit 0); their private volumes and backup were retained. The live demo web/database stayed healthy and were not switched or restored.
+
+For snapshots with rental data, run `test-restored-state.php` with `COLEMAN_EXPECT_TENANCY=1` before and after **both** version switches, even when the older code hides the features. It requires the application/tenancy/history tables and verifies every referenced attachment's existence, byte size, 0600 permissions and content fingerprint. Run `test-restored-http.php` with `COLEMAN_EXPECT_TENANCY=1` and `COLEMAN_RESTORE_APPLICATION_ID` set to a known demo rental when testing a rental-capable image; this rehearsal used `2`. Existing message and guest-create flags still apply. Keep the restore marker and localhost-only transport safeguards.
+
+This remains a same-host recovery rehearsal. Off-host image/backup transfer, VPS recovery and public migration are still unverified.
+
 ## Verified rehearsal — 2026-10-26
 
 An isolated Dokploy stack restored the `f067c9d` private-demo snapshot, switched to the previous application image (`cca0d06`), and switched back to `f067c9d`. The live Coleman deployment was left running.

@@ -69,6 +69,28 @@ try {
         list($code, $body) = restoreHttp($inbox.'&view=message&request_id=5');
         restoreCheck($code === 200 && strpos($body, 'Guest message') !== false, 'restored message screen');
     }
+    if (getenv('COLEMAN_EXPECT_TENANCY') === '1') {
+        $applicationId = getenv('COLEMAN_RESTORE_APPLICATION_ID');
+        restoreCheck(ctype_digit($applicationId ?: '') && (int)$applicationId > 0, 'explicit rental fixture selected');
+        list($code, $body) = restoreHttp('/portal');
+        restoreCheck($code === 200 && strpos($body, 'Open my rental') !== false && strpos($body, 'Synthetic rental history') === false, 'restored tenant portal requires sign-in');
+        list($code, $body) = restoreHttp($inbox.'&view=applications');
+        restoreCheck($code === 200 && strpos($body, 'Manage rental') !== false, 'restored application list');
+        foreach (array('application'=>'Application details', 'lease'=>'Move-in checklist', 'rent'=>'Payment records', 'maintenance'=>'Update request') as $section=>$marker) {
+            list($code, $body) = restoreHttp($inbox.'&view=tenancy&application_id='.(int)$applicationId.'&section='.$section);
+            restoreCheck($code === 200 && strpos($body, $marker) !== false, 'restored rental '.$section);
+            // Exercise authenticated file delivery; the state check separately fingerprints all file bytes.
+            $dom = new DOMDocument(); @$dom->loadHTML($body, LIBXML_NONET); $xpath = new DOMXPath($dom);
+            foreach ($xpath->query('//form[button[@value="file_download"]]') as $form) {
+                $post = array('operation'=>'file_download');
+                foreach ($xpath->query('.//input[@type="hidden"]', $form) as $input) { $post[$input->getAttribute('name')] = $input->getAttribute('value'); }
+                list($downloadCode, $download) = restoreHttp(restorePath($form->getAttribute('action')), $post);
+                restoreCheck($downloadCode === 200 && ($section === 'lease' ? substr($download, 0, 5) === '%PDF-' : substr($download, 0, 2) === "\xff\xd8"), 'restored private '.$section.' download');
+            }
+        }
+        list($code, $body) = restoreHttp('/var/coleman-private/');
+        restoreCheck($code === 403, 'restored private storage denies direct HTTP access');
+    }
     restoreCheck(!getenv('COLEMAN_TEST_GUEST_CREATE') || getenv('COLEMAN_TEST_GUEST_CREATE') === '1', 'explicit guest-write test option');
     if (getenv('COLEMAN_TEST_GUEST_CREATE') === '1') {
         list($code, $body) = restoreHttp('/');
