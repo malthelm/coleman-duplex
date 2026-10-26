@@ -6,6 +6,7 @@ require_once __DIR__.'/classes/ColemanCalendar.php';
 require_once __DIR__.'/classes/ColemanMessage.php';
 require_once __DIR__.'/classes/ColemanIcal.php';
 require_once __DIR__.'/classes/ColemanApplication.php';
+require_once __DIR__.'/classes/ColemanTenancy.php';
 
 /** A direct-request storefront for two apartments; no payment or reservation creation. */
 class ColemanStay extends Module
@@ -43,6 +44,7 @@ class ColemanStay extends Module
         ColemanCalendar::installSchema();
         ColemanMessage::installSchema();
         ColemanApplication::installSchema();
+        ColemanTenancy::installSchema();
         if (!Tab::getIdFromClassName('AdminColemanRequests')) {
             $tab = new Tab();
             $tab->class_name = 'AdminColemanRequests';
@@ -93,7 +95,8 @@ class ColemanStay extends Module
     {
         // QloApps labels module storefronts FC_FRONT and builds class names in lowercase.
         if ($params['controller_type'] == Dispatcher::FC_FRONT
-            && strcasecmp($params['controller_class'], 'ColemanstayStayModuleFrontController') !== 0) {
+            && strcasecmp($params['controller_class'], 'ColemanstayStayModuleFrontController') !== 0
+            && strcasecmp($params['controller_class'], 'ColemanstayPortalModuleFrontController') !== 0) {
             header('Location: /', true, 302);
             exit;
         }

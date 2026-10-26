@@ -4,6 +4,7 @@ require_once _PS_MODULE_DIR_.'colemanstay/classes/ColemanCalendar.php';
 require_once _PS_MODULE_DIR_.'colemanstay/classes/ColemanMessage.php';
 require_once _PS_MODULE_DIR_.'colemanstay/classes/ColemanIcal.php';
 require_once _PS_MODULE_DIR_.'colemanstay/classes/ColemanApplication.php';
+require_once _PS_MODULE_DIR_.'colemanstay/classes/ColemanTenancy.php';
 /** A focused host inbox using native employee authentication and permissions. */
 class AdminColemanRequestsController extends ModuleAdminController
 {
@@ -11,6 +12,7 @@ class AdminColemanRequestsController extends ModuleAdminController
     private $hostView = 'requests';
     private $formValues = array();
     private $calendarPreview = null;
+    private $tenancyCode = null;
 
     /** Retain the module tab's native access checks. */
     public function __construct()
@@ -24,7 +26,7 @@ class AdminColemanRequestsController extends ModuleAdminController
     public function initProcess()
     {
         $view = Tools::getValue('view', 'requests');
-        if (is_string($view) && in_array($view, array('requests', 'calendar', 'settings', 'message', 'applications', 'application'), true)) { $this->hostView = $view; }
+        if (is_string($view) && in_array($view, array('requests', 'calendar', 'settings', 'message', 'applications', 'application', 'tenancy'), true)) { $this->hostView = $view; }
         $this->action = '';
         $this->ajax = false;
         $filter = Tools::getValue('status', 'pending');
@@ -43,6 +45,7 @@ class AdminColemanRequestsController extends ModuleAdminController
             return;
         }
         $decision = Tools::getValue('decision');
+        if ($decision === 'tenant_action') { $this->postTenancy(); return; }
         $id = $decision === 'unblocked' ? Tools::getValue('block_id') : Tools::getValue('request_id', Tools::getValue('id_product', ''));
         if ($decision === 'application_saved') { $id = Tools::getValue('application_id'); }
         $revision = Tools::getValue('revision', '0');
@@ -183,9 +186,47 @@ class AdminColemanRequestsController extends ModuleAdminController
             'review_errors' => $this->errors, 'notice' => $notice,
             'status_labels' => array('pending' => $this->l('Pending'), 'approved' => $this->l('Approved'), 'reserved' => $this->l('Reserved'), 'declined' => $this->l('Declined'), 'all' => $this->l('All requests')),
         ));
-        if ($this->hostView === 'applications' || $this->hostView === 'application') { $this->initApplicationContent(); }
+        if ($this->hostView === 'tenancy') { $this->initTenancy(); }
+        elseif ($this->hostView === 'applications' || $this->hostView === 'application') { $this->initApplicationContent(); }
         elseif ($this->hostView === 'message') { $this->initMessageContent(); }
         elseif ($this->hostView !== 'requests') { $this->initApartmentContent(); }
+    }
+
+    /** Native host permissions and CSRF have already been checked by postProcess. */
+    private function postTenancy()
+    {
+        $this->hostView = 'tenancy';
+        try {
+            $id = Tools::getValue('application_id', '');
+            if (!is_string($id) || !ctype_digit($id)) { throw new DomainException('missing'); }
+            $row = ColemanTenancy::read((int)$id);
+            $operation = Tools::getValue('operation');
+            if ($operation === 'file_download') { ColemanTenancy::download($row, Tools::getValue('file_id')); }
+            if ($operation === 'csv') { ColemanTenancy::export($row); }
+            if ($operation === 'receipt') { ColemanTenancy::export($row, Tools::getValue('entry_id')); }
+            $this->tenancyCode = ColemanTenancy::change((int)$id, Tools::getValue('revision'), $operation, $_POST, (int)$this->context->employee->id, $_FILES['document'] ?? null);
+            if ($this->tenancyCode !== null) { return; }
+            $url = $this->context->link->getAdminLink('AdminColemanRequests').'&view=tenancy&application_id='.(int)$id.'&section='.ColemanTenancy::section(Tools::getValue('section')).'&saved=1';
+            header('Location: '.$url, true, 303); exit;
+        } catch (DomainException $e) {
+            http_response_code($e->getMessage() === 'stale' ? 409 : 422);
+            $this->errors[] = ColemanTenancy::errorMessage($e->getMessage());
+        } catch (Throwable $e) {
+            error_log('Coleman rental save failed: '.get_class($e)); http_response_code(503);
+            $this->errors[] = $this->l('The record could not be saved. Please reload and try again.');
+        }
+    }
+
+    /** Present one rental with the same layout and tokens as the host inbox. */
+    private function initTenancy()
+    {
+        $row = null;
+        try { $row = ColemanTenancy::read((int)Tools::getValue('application_id')); }
+        catch (DomainException $e) { http_response_code(404); }
+        $url = $this->context->link->getAdminLink('AdminColemanRequests').'&view=tenancy&application_id='.(int)Tools::getValue('application_id');
+        $this->context->smarty->assign(ColemanTenancy::viewData($row, false, $url, $this->errors ? $_POST : array()));
+        $this->context->smarty->assign(array('access_code'=>$this->tenancyCode, 'can_review'=>!empty($this->tabAccess['edit']), 'portal_csrf'=>'', 'rental_saved'=>Tools::getValue('saved') === '1',
+            'rental_section'=>ColemanTenancy::section(Tools::getValue('section'))));
     }
 
     /** Render bounded application lists and one private host progress/history view. */

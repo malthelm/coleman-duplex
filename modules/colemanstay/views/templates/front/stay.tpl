@@ -76,5 +76,5 @@
 </div><p class="request-note">{l s='Private demo: test details only. Requests are saved to the host inbox. No email, payment or reservation.' mod='colemanstay'}</p></section>
 </div>
 </main>
-<footer class="site-footer"><div class="wrap footer-inner"><p>© 560 Coleman <span>·</span> {l s='Highland Park, Los Angeles' mod='colemanstay'}</p><div><a href="/host-admin/index.php?controller=AdminColemanRequests">{l s='Host login' mod='colemanstay'}</a><a href="https://github.com/malthelm/coleman-duplex/tree/codex/coleman-demo">{l s='Source · QloApps / OSL-3.0' mod='colemanstay'}</a></div></div></footer>
+<footer class="site-footer"><div class="wrap footer-inner"><p>© 560 Coleman <span>·</span> {l s='Highland Park, Los Angeles' mod='colemanstay'}</p><div><a href="/host-admin/index.php?controller=AdminColemanRequests">{l s='Host login' mod='colemanstay'}</a><a href="https://github.com/malthelm/coleman-duplex/tree/codex/coleman-demo">{l s='Source · QloApps / OSL-3.0' mod='colemanstay'}</a></div></div><a href="/portal">{l s='Your rental' mod='colemanstay'}</a></footer>
 </body></html>
