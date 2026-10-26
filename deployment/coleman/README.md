@@ -42,7 +42,7 @@ Keep upstream changes separate from this module. Persistent application files ar
 
 ## Visual direction and asset
 
-Warm cream, olive, generous space and editorial serif typography; no hotel booking widgets or unconfirmed amenity claims. Desktop target 1440×1000, phone target 390×844. Native form controls, visible focus, semantic labels, keyboard skip link, server validation and no-JavaScript submission.
+Classic rental-listing layout: white background, dark sans-serif typography, coral request buttons, rounded apartment photos and a bordered request panel. Apartment comparison comes first; no unconfirmed ratings, amenities, rates or availability. The compact trip bar focuses the real date and guest fields. Desktop target 1440×1000, phone target 390×844. Native form controls, visible focus, semantic labels, keyboard skip link, server validation and no-JavaScript submission.
 
 `interior.png` is an AI-generated fictional interior, not a photograph of either apartment. Every display labels it as a concept. Original generation prompt: “Landscape 3:2 concept image for a private demo apartment rental website. A warm understated Los Angeles bungalow living room with off-white plaster walls, oak flooring, a linen sofa, walnut chair, a single leafy plant, paperback books, and sunlight through wood framed windows. Quiet lived-in editorial architecture photography, restrained natural olive cream and terracotta palette, no luxury mansion, no people, no text, no watermark. Illustrative fictional interior, not a representation of a real address.”
 

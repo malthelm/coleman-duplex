@@ -23,3 +23,17 @@ if (form) {
     document.querySelector('#submit-status').textContent = '';
   });
 }
+
+// The compact trip bar takes guests to the corresponding request field.
+document.querySelectorAll('[data-focus]').forEach(link => {
+  const field = document.getElementById(link.dataset.focus);
+  if (!field) {
+    link.href = '#request';
+    return;
+  }
+  link.addEventListener('click', event => {
+    event.preventDefault();
+    field.scrollIntoView({block: 'center'});
+    field.focus({preventScroll: true});
+  });
+});
