@@ -4,14 +4,16 @@ document.querySelectorAll('.decision-form, .host-form').forEach(form => {
     if (form.getAttribute('aria-busy') === 'true') { event.preventDefault(); return; }
     const button = event.submitter;
     if (!button) { event.preventDefault(); return; }
+    // Downloads leave the page in place and must remain usable afterward.
+    if (['file_download', 'receipt', 'csv', 'draft_download', 'calendar_export'].includes(button.value)) return;
     // Disabled submit buttons are omitted from native form data; preserve the choice.
     const decision = document.createElement('input');
     decision.type = 'hidden';
-    decision.name = 'decision';
+    decision.name = button.name;
     decision.value = button.value;
     form.appendChild(decision);
     form.setAttribute('aria-busy', 'true');
-    button.textContent = form.dataset.saving;
+    if (form.dataset.saving) button.textContent = form.dataset.saving;
     form.querySelectorAll('button').forEach(control => { control.disabled = true; });
   });
 });

@@ -6,7 +6,7 @@
 <title>{if $host_view == 'applications' || $host_view == 'application' || $host_view == 'tenancy'}{l s='Applications' mod='colemanstay'}{elseif $host_view == 'calendar'}{l s='Availability' mod='colemanstay'}{elseif $host_view == 'message'}{l s='Guest message' mod='colemanstay'}{elseif $host_view == 'settings'}{l s='Rental details' mod='colemanstay'}{else}{l s='Booking requests' mod='colemanstay'}{/if} · 560 Coleman</title>
 <link rel="stylesheet" href="/modules/colemanstay/views/css/tokens.css">
 <link rel="stylesheet" href="/modules/colemanstay/views/css/requests.css?v=7">
-<script src="/modules/colemanstay/views/js/requests.js?v=3" defer></script>
+<script src="/modules/colemanstay/views/js/requests.js?v=4" defer></script>
 </head>
 <body>
 <a class="skip" href="#main">{l s='Skip to content' mod='colemanstay'}</a>
