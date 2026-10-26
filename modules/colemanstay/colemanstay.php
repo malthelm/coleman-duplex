@@ -2,6 +2,7 @@
 /** 560 Coleman demo additions. Copyright 2026. Licensed under OSL-3.0. */
 if (!defined('_PS_VERSION_')) { exit; }
 require_once __DIR__.'/classes/ColemanRequest.php';
+require_once __DIR__.'/classes/ColemanCalendar.php';
 
 /** A direct-request storefront for two apartments; no payment or reservation creation. */
 class ColemanStay extends Module
@@ -36,6 +37,7 @@ class ColemanStay extends Module
             PRIMARY KEY (`id_coleman_request`), UNIQUE KEY (`request_token`)
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4')) { return false; }
         $this->upgradeRequestReviewSchema();
+        ColemanCalendar::installSchema();
         if (!Tab::getIdFromClassName('AdminColemanRequests')) {
             $tab = new Tab();
             $tab->class_name = 'AdminColemanRequests';

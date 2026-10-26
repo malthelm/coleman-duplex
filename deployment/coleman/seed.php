@@ -74,4 +74,5 @@ foreach (array('ONE' => 'Apartment One', 'TWO' => 'Apartment Two') as $key => $n
     if (!$room->add()) { throw new RuntimeException('Room creation failed'); }
     Configuration::updateValue('COLEMAN_PRODUCT_'.$key, $product->id);
 }
+ColemanCalendar::installSchema();
 echo "Coleman demo ready: two draft apartments, email disabled, request-only storefront.\n";

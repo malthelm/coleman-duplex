@@ -74,6 +74,11 @@ class ColemanstayStayModuleFrontController extends ModuleFrontController
         try {
             $existing = Db::getInstance()->getValue('SELECT id_coleman_request FROM `'._DB_PREFIX_."coleman_request` WHERE request_token='".pSQL($token)."'");
             if (!$existing) {
+                $unitId = $this->apartments[$f['apartment']];
+                if (!ColemanCalendar::available($unitId, $f['arrival'], $f['departure'])) { throw new DomainException('unavailable'); }
+                $rental = ColemanCalendar::unit($unitId);
+                $nights = (new DateTimeImmutable($f['arrival']))->diff(new DateTimeImmutable($f['departure']))->days;
+                if ($rental['owner_confirmed'] && ($nights < (int)$rental['min_nights'] || (int)$f['guests'] > (int)$rental['max_guests'])) { throw new DomainException('stay_limits'); }
                 $request = new ColemanRequest();
                 $request->id_product = $this->apartments[$f['apartment']];
                 foreach (array('guest_name', 'email', 'arrival', 'departure', 'message') as $key) { $request->$key = $f[$key]; }
@@ -87,6 +92,11 @@ class ColemanstayStayModuleFrontController extends ModuleFrontController
             // Keep the token until the receipt GET so a transport retry remains idempotent.
             header('Location: /?sent=1#request', true, 303);
             exit;
+        } catch (DomainException $e) {
+            http_response_code(422);
+            $this->requestErrors[] = $e->getMessage() === 'unavailable'
+                ? $this->module->l('Those nights are unavailable. Please choose different dates or another apartment.', 'stay')
+                : $this->module->l('Please check the apartment’s minimum stay and maximum guests, then update your request.', 'stay');
         } catch (Exception $e) {
             error_log('Coleman request save failed: '.get_class($e));
             http_response_code(503);
@@ -100,7 +110,18 @@ class ColemanstayStayModuleFrontController extends ModuleFrontController
         parent::initContent();
         $receipt = Tools::getValue('sent') === '1' ? ($_SESSION['receipt'] ?? '') : '';
         if ($receipt) { $_SESSION['request_token'] = bin2hex(random_bytes(32)); }
+        $rental = null;
+        if (isset($this->apartments[$this->form['apartment']])) {
+            $details = ColemanCalendar::unit($this->apartments[$this->form['apartment']]);
+            if ($details['owner_confirmed']) {
+                $rental = $details;
+                foreach (array('nightly_rate', 'monthly_rate', 'cleaning_fee') as $field) {
+                    $rental[$field] = $details[$field] === null ? '' : number_format((float)$details[$field], 2);
+                }
+            }
+        }
         $this->context->smarty->assign(array(
+            'coleman_rental' => $rental,
             'coleman_form' => $this->form,
             'coleman_errors' => $this->requestErrors,
             'coleman_csrf' => $_SESSION['csrf'],

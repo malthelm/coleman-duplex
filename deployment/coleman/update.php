@@ -12,3 +12,8 @@ Context::getContext()->smarty->clearCompiledTemplate(_PS_MODULE_DIR_.'colemansta
 
 $module->upgradeRequestReviewSchema();
 Context::getContext()->smarty->clearCompiledTemplate(_PS_MODULE_DIR_.'colemanstay/views/templates/admin/requests.tpl');
+
+ColemanCalendar::installSchema();
+foreach (array('calendar.tpl', 'settings.tpl') as $template) {
+    Context::getContext()->smarty->clearCompiledTemplate(_PS_MODULE_DIR_.'colemanstay/views/templates/admin/'.$template);
+}

@@ -3,7 +3,7 @@
 QloApps fork for two apartments at 560 Coleman Avenue, Highland Park, Los Angeles.
 Upstream base: `10251e3591f4e0528a34e1bcf99c30594a93055a` (`develop`). This is a preview based on an unreleased upstream revision; review/pin a suitable stable release before public use.
 
-The `colemanstay` module supplies the website, apartment pages, validated request form and authenticated **Stay requests** inbox. It uses an additive ObjectModel/table and does not modify core QloApps. Short stays and longer enquiries use the same dates form. Requests do not reserve inventory, create orders, send email or charge guests. Native apartments remain inactive drafts; zero prices and internal capacity/time values are software placeholders, never advertised rates or policies.
+The `colemanstay` module supplies the website, apartment pages, validated request form and authenticated **Stay requests** inbox. It uses an additive ObjectModel/table and does not modify core QloApps. Short stays and longer enquiries use the same dates form. Submitting a request does not reserve dates, create orders, send email or charge guests. Hosts can separately reserve approved requests in the custom calendar; native QloApps inventory remains separate. Native apartments remain inactive drafts; zero prices and internal capacity/time values are software placeholders, never advertised rates or policies.
 
 ## Build and first installation
 
@@ -24,7 +24,7 @@ php deployment/coleman/seed.php
 
 The installer refuses an existing settings file and never clears the database. The seed creates one draft property and two draft apartments; repeated completed runs do not duplicate them. If first installation fails mid-step, inspect the error and preserve the partial database before recovery. Do not blindly reinstall.
 
-Host login: `/host-admin/`, account `host@coleman.example`, password from the private deployment environment. No default password is committed. The branded inbox is at `/host-admin/index.php?controller=AdminColemanRequests`. Hosts with edit permission can approve, decline, or move a request back to pending. Decisions record the employee, timestamp and revision; stale submissions cannot overwrite a newer decision. Approval is for follow-up only: dates remain unreserved, and messages/payments are not sent. Use the status filters to find reviewed requests. Advanced QloApps settings remain available from the footer.
+Host login: `/host-admin/`, account `host@coleman.example`, password from the private deployment environment. No default password is committed. The branded inbox is at `/host-admin/index.php?controller=AdminColemanRequests`. Hosts with edit permission can approve, decline, or move a request back to pending. Decisions record the employee, timestamp and revision; stale submissions cannot overwrite a newer decision. Approval is for follow-up only. Use **Reserve dates** and its confirmation checkbox to allocate approved nights. **Release dates** frees the nights and returns the request to approved follow-up. The Availability tab supports separate apartment calendars and manual blocks. Allocation uses a shared apartment row lock and a transaction to prevent overlapping reservations and manual blocks; checkout is exclusive. Messages/payments are not sent. Rental details stay blank until entered, and private until explicitly marked owner-confirmed. Confirmed minimum stays and guest limits apply to requests and reservations. Use the status filters to find reviewed requests. Advanced QloApps settings remain available from the footer.
 
 ## VPS migration
 
@@ -52,12 +52,20 @@ The fork retains upstream license notices. Custom additions use OSL-3.0. A visib
 
 This is a GitHub fork of `Qloapps/QloApps` at https://github.com/malthelm/coleman-duplex. The deployed custom work is on `codex/coleman-demo`; `upstream` tracks QloApps. Keep custom features in `colemanstay` and preserve upstream license notices.
 
-No paid QloApps channel-manager subscription is required for this direct-request workflow. Future integrations can be implemented in this fork. Start with platform-supported iCal import/export for blocked dates, then consider direct APIs where access is available. Calendar feeds do not provide instant synchronization, messaging, pricing or payments. Before enabling availability blocking, define how host approval creates an actual reservation and how conflicting dates are handled. No external platform sync is implemented yet; each platform's access terms and charges still apply independently.
+No paid QloApps channel-manager subscription is required for this direct-request workflow. Future integrations can be implemented in this fork. Start with platform-supported iCal import/export for blocked dates, then consider direct APIs where access is available. Calendar feeds do not provide instant synchronization, messaging, pricing or payments. No external platform sync is implemented yet; each platform's access terms and charges still apply independently.
 
 Run the focused review regression check inside an installed web container:
 
 ```sh
 php deployment/coleman/test-request-review.php
+php deployment/coleman/test-calendar.php
 ```
 
 It shadows the request table with a connection-local temporary table and checks persistence, review transitions, stale submissions, CSRF, permissions, escaping and template rendering without changing live requests.
+
+
+The calendar check uses connection-local temporary tables for rental settings, allocations and requests. It covers adjacent dates, overlap rejection, stale submissions, reservation/release transitions, confirmed stay limits, permissions and real Smarty templates. No test prices or policies are written to live apartment settings.
+
+**Calendar rollback:** rolling back to code before the calendar feature would stop enforcing its blocks and would not understand reserved requests. Prefer a forward fix. If rollback is necessary, first stop guest writes and preserve the current database/site; restore a matched backup only after reconciling any requests received since that backup. Never overwrite new guest data blindly.
+
+See [launch-status.md](launch-status.md) for the five-stage goal and owner decisions.

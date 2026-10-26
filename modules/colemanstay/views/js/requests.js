@@ -1,5 +1,5 @@
 'use strict';
-document.querySelectorAll('.decision-form').forEach(form => {
+document.querySelectorAll('.decision-form, .host-form').forEach(form => {
   form.addEventListener('submit', event => {
     if (form.getAttribute('aria-busy') === 'true') { event.preventDefault(); return; }
     const button = event.submitter;
