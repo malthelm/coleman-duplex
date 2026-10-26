@@ -125,6 +125,29 @@ class ColemanCalendar
         } catch (Throwable $error) { $db->execute('ROLLBACK'); throw $error; }
     }
 
+    /** Add a reviewed snapshot as manual blocks; conflicts roll back the entire import. */
+    public static function importRanges($id, $ranges, $label, $actor)
+    {
+        if (!is_array($ranges) || count($ranges) > 500 || !is_string($label) || !trim($label) || mb_strlen($label) > 160 || strip_tags($label) !== $label) { throw new DomainException('ical_file'); }
+        $db = Db::getInstance(); $db->execute('START TRANSACTION');
+        try {
+            self::lockUnit($id); $added = 0;
+            foreach ($ranges as $range) {
+                if (!isset($range['arrival'], $range['departure']) || !self::validRange($range['arrival'], $range['departure'])) { throw new DomainException('dates'); }
+                $overlaps = $db->executeS('SELECT arrival, departure FROM `'._DB_PREFIX_."coleman_calendar` WHERE id_product=".(int)$id." AND active=1 AND arrival < '".pSQL($range['departure'])."' AND departure > '".pSQL($range['arrival'])."'", true, false);
+                $covered = false;
+                foreach ($overlaps as $block) { if ($block['arrival'] <= $range['arrival'] && $block['departure'] >= $range['departure']) { $covered = true; break; } }
+                if ($covered) { continue; }
+                if ($overlaps) { throw new DomainException('overlap'); }
+                $now = date('Y-m-d H:i:s');
+                if (!$db->insert('coleman_calendar', array('id_product' => (int)$id, 'arrival' => pSQL($range['arrival']), 'departure' => pSQL($range['departure']),
+                    'label' => pSQL($label), 'date_add' => $now, 'updated_at' => $now, 'updated_by' => (int)$actor))) { throw new RuntimeException('Calendar import failed'); }
+                $added++;
+            }
+            $db->execute('COMMIT'); return $added;
+        } catch (Throwable $error) { $db->execute('ROLLBACK'); throw $error; }
+    }
+
     /** Release a manual block while retaining its record and rejecting stale forms. */
     public static function unblock($id, $revision, $actor)
     {

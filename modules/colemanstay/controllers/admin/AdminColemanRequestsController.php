@@ -2,12 +2,14 @@
 require_once _PS_MODULE_DIR_.'colemanstay/classes/ColemanRequest.php';
 require_once _PS_MODULE_DIR_.'colemanstay/classes/ColemanCalendar.php';
 require_once _PS_MODULE_DIR_.'colemanstay/classes/ColemanMessage.php';
+require_once _PS_MODULE_DIR_.'colemanstay/classes/ColemanIcal.php';
 /** A focused host inbox using native employee authentication and permissions. */
 class AdminColemanRequestsController extends ModuleAdminController
 {
     private $requestFilter = 'pending';
     private $hostView = 'requests';
     private $formValues = array();
+    private $calendarPreview = null;
 
     /** Retain the module tab's native access checks. */
     public function __construct()
@@ -43,17 +45,31 @@ class AdminColemanRequestsController extends ModuleAdminController
         $id = $decision === 'unblocked' ? Tools::getValue('block_id') : Tools::getValue('request_id', Tools::getValue('id_product', ''));
         $revision = Tools::getValue('revision', '0');
         $this->formValues = array();
-        foreach (array('id_product', 'nightly_rate', 'monthly_rate', 'cleaning_fee', 'min_nights', 'max_guests', 'house_rules', 'owner_confirmed', 'arrival', 'departure', 'label', 'subject', 'body') as $field) {
+        foreach (array('id_product', 'nightly_rate', 'monthly_rate', 'cleaning_fee', 'min_nights', 'max_guests', 'house_rules', 'owner_confirmed', 'arrival', 'departure', 'label', 'subject', 'body', 'import_label') as $field) {
             $value = Tools::getValue($field, '');
             $this->formValues[$field] = is_string($value) ? trim($value) : $value;
         }
         try {
             if (!is_string($id) || !ctype_digit($id) || (int)$id < 1 || !is_string($revision) || !ctype_digit($revision)
-                || !is_string($decision) || !in_array($decision, array('approved', 'declined', 'pending', 'reserved', 'released', 'settings_saved', 'blocked', 'unblocked', 'draft_saved', 'draft_download'), true)) {
+                || !is_string($decision) || !in_array($decision, array('approved', 'declined', 'pending', 'reserved', 'released', 'settings_saved', 'blocked', 'unblocked', 'draft_saved', 'draft_download', 'calendar_export', 'calendar_preview', 'calendar_imported'), true)) {
                 throw new DomainException('invalid');
             }
             $actor = (int)$this->context->employee->id;
-            if ($decision === 'draft_saved' || $decision === 'draft_download') {
+            if ($decision === 'calendar_export') {
+                $ical = ColemanIcal::export((int)$id);
+                header('Cache-Control: no-store, private'); header('Content-Type: text/calendar; charset=UTF-8');
+                header('Content-Disposition: attachment; filename="coleman-apartment-'.(int)$id.'.ics"');
+                header('X-Content-Type-Options: nosniff'); echo $ical; exit;
+            } elseif ($decision === 'calendar_preview') {
+                $file = $_FILES['calendar_file'] ?? null;
+                if (!$file || !is_scalar($file['error']) || (int)$file['error'] !== UPLOAD_ERR_OK || !is_string($file['tmp_name'])
+                    || !is_uploaded_file($file['tmp_name']) || filesize($file['tmp_name']) > 524288) { throw new DomainException('ical_file'); }
+                $this->calendarPreview = ColemanIcal::preview((int)$id, $this->formValues['import_label'], file_get_contents($file['tmp_name']), $actor);
+                return;
+            } elseif ($decision === 'calendar_imported') {
+                $preview = ColemanIcal::verifiedPreview((int)$id, Tools::getValue('preview_payload'), Tools::getValue('preview_signature'), $actor);
+                ColemanCalendar::importRanges((int)$id, $preview['ranges'], sprintf($this->l('Imported calendar: %s'), $preview['label']), $actor);
+            } elseif ($decision === 'draft_saved' || $decision === 'draft_download') {
                 $kind = Tools::getValue('kind'); $requestRevision = Tools::getValue('request_revision');
                 if (!is_string($kind) || !is_string($requestRevision) || !ctype_digit($requestRevision)) { throw new DomainException('invalid'); }
                 if ($decision === 'draft_saved') {
@@ -80,6 +96,11 @@ class AdminColemanRequestsController extends ModuleAdminController
             }
         } catch (DomainException $error) {
             $messages = array(
+                'ical_file' => $this->l('Choose a valid iCalendar file up to 512 KB and 500 events. No dates were imported.'),
+                'ical_dates' => $this->l('The calendar contains invalid date ranges. No dates were imported.'),
+                'ical_unsupported' => $this->l('This import accepts non-recurring, all-day events. Timed events, recurrence rules and invitation updates are not supported. No dates were imported.'),
+                'ical_label' => $this->l('Give this import a plain-text name up to 80 characters.'),
+                'ical_preview' => $this->l('This import preview expired or changed. Choose the file again and review a fresh preview.'),
                 'message_content' => $this->l('Enter a plain-text subject up to 180 characters and a message up to 10,000 characters. The subject must be a single line.'),
                 'missing_request' => $this->l('This request is not available. Return to the inbox.'),
                 'message_stale' => $this->l('The request changed. Reload this page and review its current status before saving or downloading a draft. Your entries are still below.'),
@@ -242,6 +263,7 @@ class AdminColemanRequestsController extends ModuleAdminController
         $this->context->smarty->assign(array('units' => $units, 'selected_unit' => $selected, 'calendar_month' => $month->format('Y-m'),
             'month_label' => $month->format('F Y'), 'calendar_weeks' => array_chunk($days, 7), 'blocks' => $blocks,
             'previous_month' => $month->modify('-1 month')->format('Y-m'), 'next_month' => $month->modify('+1 month')->format('Y-m'),
+            'calendar_preview' => $this->calendarPreview, 'import_label' => is_string($this->formValues['import_label'] ?? '') ? ($this->formValues['import_label'] ?? '') : '',
             'today' => $today->format('Y-m-d'), 'max_date' => $today->modify('+2 years')->format('Y-m-d'), 'block_form' => $form));
     }
 

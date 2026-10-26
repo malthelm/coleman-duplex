@@ -52,7 +52,7 @@ The fork retains upstream license notices. Custom additions use OSL-3.0. A visib
 
 This is a GitHub fork of `Qloapps/QloApps` at https://github.com/malthelm/coleman-duplex. The deployed custom work is on `codex/coleman-demo`; `upstream` tracks QloApps. Keep custom features in `colemanstay` and preserve upstream license notices.
 
-No paid QloApps channel-manager subscription is required for this direct-request workflow. Future integrations can be implemented in this fork. Start with platform-supported iCal import/export for blocked dates, then consider direct APIs where access is available. Calendar feeds do not provide instant synchronization, messaging, pricing or payments. No external platform sync is implemented yet; each platform's access terms and charges still apply independently.
+No paid QloApps channel-manager subscription is required for this direct-request workflow. Future integrations can be implemented in this fork. Start with platform-supported iCal import/export for blocked dates, then consider direct APIs where access is available. Calendar feeds do not provide instant synchronization, messaging, pricing or payments. One-time iCalendar file import/export is implemented; automatic platform sync is not active; each platform's access terms and charges still apply independently.
 
 Run the focused review regression check inside an installed web container:
 
@@ -60,6 +60,7 @@ Run the focused review regression check inside an installed web container:
 php deployment/coleman/test-request-review.php
 php deployment/coleman/test-calendar.php
 php deployment/coleman/test-messages.php
+php deployment/coleman/test-ical.php
 ```
 
 It shadows the request table with a connection-local temporary table and checks persistence, review transitions, stale submissions, CSRF, permissions, escaping and template rendering without changing live requests.
@@ -84,3 +85,18 @@ The message regression check uses temporary request/draft tables and verifies pe
 ## Verified recovery
 
 An isolated restore and code rollback/return rehearsal passed on Winona on 2026-10-26. See [restore-runbook.md](restore-runbook.md) for evidence, exact scope, private artifact locations and repeatable helper commands. The live site was not rolled back. Off-host transfer and VPS migration remain pending.
+
+
+## Calendar file exchange
+
+In **Availability → Calendar files**, select an apartment, choose a `.ics` file and name its source, then preview and explicitly import the dates. This is a one-time, additive snapshot, not a subscribed feed. Nothing is fetched from URLs. Supported files contain up to 500 non-recurring all-day events within 512 KB. Timed events, recurrence and invitation updates are rejected. Past/out-of-window events are ignored; ongoing events are clipped to today and events beyond the two-year booking window are shortened, with counts shown in the preview. Cancelled and transparent events are ignored. Existing blocks are never automatically deleted; release them manually when the original calendar changes.
+
+The signed preview expires after 15 minutes and is bound to the employee and apartment. Applying it uses the same apartment lock as reservations. Fully covered ranges are skipped; partial conflicts reject and roll back the whole import. Existing reservations retain their identities. Imported dates remain ordinary releasable blocks. No new database tables or dependencies are introduced.
+
+**Download calendar** exports only active ongoing/future blocks and reservations for that apartment. It uses stable opaque event identifiers, all-day start dates and exclusive end dates. Every summary is `Unavailable`; guest names, contact details, request references and private labels are excluded. Both import and download require native host edit permission and CSRF protection. Downloads are snapshots, not public subscription URLs.
+
+Verified against the date and event semantics in [RFC 5545](https://www.rfc-editor.org/rfc/rfc5545.html). [Airbnb's calendar documentation](https://www.airbnb.com/help/article/99) describes URL subscriptions and refreshes every three hours; this file tool does not claim that integration or real-time protection. Actual platform feeds need chosen accounts, permitted network access, source-aware reconciliation and refresh/failure handling before being called connected.
+
+The installed `test-ical.php` check uses temporary tables for parser rejection, signed previews, import idempotency and batch rollback, export privacy, manual release, native permissions and template rendering.
+
+See [the RentSpree feature review](rentspree-review.md) for longer-term tenancy recommendations; these remain proposals rather than newly implemented features.

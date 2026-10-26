@@ -5,7 +5,7 @@
 <meta name="robots" content="noindex,nofollow">
 <title>{if $host_view == 'calendar'}{l s='Availability' mod='colemanstay'}{elseif $host_view == 'message'}{l s='Guest message' mod='colemanstay'}{elseif $host_view == 'settings'}{l s='Rental details' mod='colemanstay'}{else}{l s='Booking requests' mod='colemanstay'}{/if} · 560 Coleman</title>
 <link rel="stylesheet" href="/modules/colemanstay/views/css/tokens.css">
-<link rel="stylesheet" href="/modules/colemanstay/views/css/requests.css?v=3">
+<link rel="stylesheet" href="/modules/colemanstay/views/css/requests.css?v=4">
 <script src="/modules/colemanstay/views/js/requests.js?v=3" defer></script>
 </head>
 <body>
@@ -28,6 +28,7 @@
 {elseif $notice == 'released'}<div class="notice success" role="status">{l s='Dates released. The request is back in Approved for follow-up.' mod='colemanstay'}</div>
 {elseif $notice == 'draft_saved'}<div class="notice success" role="status">{l s='Draft saved. No message has been sent.' mod='colemanstay'}</div>
 {elseif $notice == 'settings_saved'}<div class="notice success" role="status">{l s='Rental details saved.' mod='colemanstay'}</div>
+{elseif $notice == 'calendar_imported'}<div class="notice success" role="status">{l s='Calendar import applied. Review the blocked dates in the calendar.' mod='colemanstay'}</div>
 {elseif $notice == 'blocked'}<div class="notice success" role="status">{l s='Dates blocked. Requests for those nights will not be accepted.' mod='colemanstay'}</div>
 {elseif $notice == 'unblocked'}<div class="notice success" role="status">{l s='Date block released.' mod='colemanstay'}</div>
 {elseif $notice == 'pending'}<div class="notice success" role="status">{l s='Request moved back to pending.' mod='colemanstay'}</div>{/if}

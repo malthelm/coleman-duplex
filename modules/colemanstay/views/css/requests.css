@@ -166,3 +166,17 @@ h3 { font-size: 14px; font-weight: 600; margin: 0 0 8px; }
   .message-context dd { margin: 12px 0 0; }
   .draft-download .button { width: 100%; }
 }
+
+.calendar-exchange { margin-block: 48px; padding-top: 32px; border-top: 1px solid var(--line); }
+.exchange-layout { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); gap: 48px; margin-top: 32px; }
+.exchange-layout h3, .import-preview h3 { font-size: 18px; margin-bottom: 20px; }
+.exchange-layout .field-hint { margin-block: 16px 24px; }
+.host-form input[type=file] { font-size: 14px; }
+.host-form input[type=file]::file-selector-button { min-height: 32px; margin-right: 12px; border: 0; border-radius: var(--radius-control); padding: 6px 10px; background: var(--surface-subtle); color: var(--text-primary); font: inherit; cursor: pointer; }
+.import-preview { border-top: 1px solid var(--line); padding-top: 32px; margin-top: 32px; overflow-wrap: anywhere; }
+.import-dates { padding-left: 20px; font-size: 14px; font-variant-numeric: tabular-nums; }
+.import-dates li { padding-block: 6px; }
+.import-preview .host-form { margin-top: 24px; }
+@media (max-width: 700px) {
+  .exchange-layout { grid-template-columns: minmax(0, 1fr); gap: 32px; }
+}

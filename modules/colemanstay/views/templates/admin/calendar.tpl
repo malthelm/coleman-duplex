@@ -24,3 +24,5 @@
 {if $block.request_id}<a href="{$inbox_url|escape:'html':'UTF-8'}&amp;status=reserved">{l s='Review reservation' mod='colemanstay'}</a>{elseif $can_review}<form class="host-form" method="post" action="{$inbox_url|escape:'html':'UTF-8'}&amp;view=calendar" data-saving="{l s='Saving…' mod='colemanstay'}"><input type="hidden" name="token" value="{$token|escape:'html':'UTF-8'}"><input type="hidden" name="id_product" value="{$selected_unit|intval}"><input type="hidden" name="month" value="{$calendar_month|escape:'html':'UTF-8'}"><input type="hidden" name="block_id" value="{$block.id_coleman_calendar|intval}"><input type="hidden" name="revision" value="{$block.revision|intval}"><button class="button secondary" type="submit" name="decision" value="unblocked">{l s='Release block' mod='colemanstay'}</button></form>{/if}</article>
 {foreachelse}<p class="muted">{l s='No blocked dates or reserved stays in this view.' mod='colemanstay'}</p>{/foreach}
 </section>
+
+{include file='./calendar-exchange.tpl'}

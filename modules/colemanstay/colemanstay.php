@@ -4,6 +4,7 @@ if (!defined('_PS_VERSION_')) { exit; }
 require_once __DIR__.'/classes/ColemanRequest.php';
 require_once __DIR__.'/classes/ColemanCalendar.php';
 require_once __DIR__.'/classes/ColemanMessage.php';
+require_once __DIR__.'/classes/ColemanIcal.php';
 
 /** A direct-request storefront for two apartments; no payment or reservation creation. */
 class ColemanStay extends Module
