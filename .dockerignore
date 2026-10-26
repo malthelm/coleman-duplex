@@ -4,3 +4,7 @@
 config/settings.inc.php
 config/settings.old.php
 review
+
+# Third-party listing photos are downloaded and verified during the image build.
+modules/colemanstay/views/img/560-lower-kitchen.jpg
+modules/colemanstay/views/img/562-upper-kitchen.jpg
