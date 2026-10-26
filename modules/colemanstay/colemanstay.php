@@ -22,7 +22,7 @@ class ColemanStay extends Module
     /** Install an additive request table and authenticated host inbox. */
     public function install()
     {
-        if (!parent::install() || !$this->registerHook('actionDispatcher')) { return false; }
+        if (!parent::install() || !$this->registerHook(array('actionDispatcher', 'actionAdminLoginControllerSetMedia', 'actionAdminControllerSetMedia'))) { return false; }
         if (!Db::getInstance()->execute('CREATE TABLE IF NOT EXISTS `'._DB_PREFIX_.'coleman_request` (
             `id_coleman_request` INT UNSIGNED NOT NULL AUTO_INCREMENT,
             `id_product` INT UNSIGNED NOT NULL,
@@ -45,6 +45,20 @@ class ColemanStay extends Module
             if (!$tab->add()) { return false; }
         }
         return true;
+    }
+
+    /** Apply the storefront design tokens to the native host login. */
+    public function hookActionAdminLoginControllerSetMedia($params)
+    {
+        $this->context->controller->addCSS($this->_path.'views/css/tokens.css');
+        $this->context->controller->addCSS($this->_path.'views/css/host.css');
+        $this->context->controller->addJS($this->_path.'views/js/host.js');
+    }
+
+    /** Keep native host controls visually consistent with the guest storefront. */
+    public function hookActionAdminControllerSetMedia($params)
+    {
+        $this->hookActionAdminLoginControllerSetMedia($params);
     }
 
     /** Keep the demo request-only, including legacy checkout URLs. */

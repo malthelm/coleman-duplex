@@ -1,0 +1,59 @@
+/* Visual layer only: QloApps owns authentication, permissions and table behavior. */
+body, .bootstrap, .bootstrap h1, .bootstrap h2, .bootstrap h3, .bootstrap h4,
+.bootstrap input, .bootstrap select, .bootstrap textarea, .bootstrap button,
+#login-panel, #login-panel input, #login-panel button {
+  font-family: var(--font-ui);
+}
+body, .bootstrap { color: var(--text-primary); }
+.bootstrap a, #login-panel a { color: var(--brand); }
+.bootstrap a:hover, #login-panel a:hover { color: var(--brand-hover); }
+.bootstrap :focus-visible, #login-panel :focus-visible { outline: var(--focus-ring); outline-offset: 3px; }
+.bootstrap .panel, .bootstrap #login-panel .panel {
+  background: var(--surface); border: 1px solid var(--line);
+  border-radius: var(--radius-panel); box-shadow: none;
+}
+.bootstrap .panel .panel-heading { color: var(--text-primary); font-family: var(--font-ui); }
+.bootstrap .form-control, .bootstrap input[type=text], .bootstrap input[type=password],
+.bootstrap input[type=email], .bootstrap textarea, .bootstrap select {
+  border-color: var(--control-line); border-radius: var(--radius-control);
+  color: var(--text-primary); background: var(--surface); box-shadow: none;
+  font-size: 14px;
+}
+.bootstrap .form-control:focus, .bootstrap input:focus, .bootstrap textarea:focus, .bootstrap select:focus {
+  border-color: var(--brand); box-shadow: none;
+}
+.bootstrap .btn { border-radius: var(--radius-control); font-family: var(--font-ui); }
+.bootstrap .btn-primary, .bootstrap .btn-default:hover, #login-panel .btn-primary {
+  color: var(--surface); background: var(--brand); border-color: var(--brand); box-shadow: none;
+}
+.bootstrap .btn-primary:hover, #login-panel .btn-primary:hover { background: var(--brand-hover); border-color: var(--brand-hover); }
+.bootstrap .btn-primary:active, #login-panel .btn-primary:active { background: var(--brand-pressed); border-color: var(--brand-pressed); }
+.bootstrap .btn-primary:disabled, #login-panel .btn-primary:disabled { background: var(--brand-disabled); border-color: var(--brand-disabled); opacity: 1; }
+.bootstrap .alert { border-width: 1px; border-radius: var(--radius-control); }
+.bootstrap .alert-danger { color: var(--error); background: var(--error-surface); border-color: var(--error); }
+.bootstrap .alert-success { color: var(--success); background: var(--success-surface); border-color: var(--success); }
+.bootstrap .table thead th { color: var(--text-secondary); }
+.bootstrap .table tbody tr:hover td { background: var(--surface-subtle); }
+.bootstrap input[type=checkbox] { accent-color: var(--brand); }
+body.page-sidebar { background: var(--surface-subtle); }
+#login-panel { max-width: 440px; width: calc(100% - 32px); margin: 32px auto; }
+#login-panel #shop-img { display: none; }
+#login-panel #login-header { margin-bottom: 24px; }
+.bootstrap #login-panel .panel { padding: 24px; }
+#login-panel #shop_name { font-size: 24px; font-weight: 650; color: var(--brand); line-height: 1.25; margin-bottom: 24px; }
+#login-panel .form-control { font-family: var(--font-ui), FontAwesome; font-size: 16px; min-height: var(--control-height); }
+#login-panel .btn { min-height: var(--control-height); font-size: 16px; font-weight: 650; }
+#login-panel .form-group { margin-bottom: 20px; }
+#login-panel #login-footer { color: var(--text-secondary); }
+#login-panel a { display: inline-flex; align-items: center; min-height: 44px; }
+@media (max-width: 520px) {
+  #login-panel { margin-block: 20px; }
+  .bootstrap #login-panel .panel { padding: 20px; }
+}
+
+.bootstrap #login-panel .flip-container { margin-top: 24px; }
+.bootstrap #login-panel .panel { border-radius: var(--radius-panel); box-shadow: none; }
+.bootstrap #login-panel .form-control:focus { background: var(--surface); }
+#login-panel .btn { text-transform: none; }
+@media (prefers-reduced-motion: reduce) { .bootstrap #login-panel .front, .bootstrap #login-panel .back { transition: none; } }
+.bootstrap #login { background: var(--surface-subtle); min-height: 100vh; padding-top: 1px; }

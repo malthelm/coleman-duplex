@@ -1,0 +1,38 @@
+/* Shared visual values for the guest site and native host workspace. */
+:root {
+  --font-ui: -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
+  --text-primary: #222222;
+  --text-secondary: #626262;
+  --surface: #ffffff;
+  --surface-subtle: #f7f7f7;
+  --line: #dddddd;
+  --control-line: #8a8a8a;
+  --brand: #d90848;
+  --brand-hover: #b8073d;
+  --brand-pressed: #940631;
+  --brand-disabled: #8a3d53;
+  --brand-soft: #fff0f4;
+  --error: #941c32;
+  --error-surface: #fff3f5;
+  --success: #245d39;
+  --success-surface: #edf7f0;
+  --radius-control: 8px;
+  --radius-panel: 14px;
+  --radius-pill: 999px;
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-12: 48px;
+  --text-small: 0.75rem;
+  --text-label: 0.875rem;
+  --text-body: 1rem;
+  --text-heading: 1.5rem;
+  --control-height: 48px;
+  --focus-ring: 2px solid var(--brand);
+  color-scheme: light;
+}
+::selection { color: var(--text-primary); background: #ffd8e3; }
