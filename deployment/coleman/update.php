@@ -15,6 +15,7 @@ Context::getContext()->smarty->clearCompiledTemplate(_PS_MODULE_DIR_.'colemansta
 
 ColemanCalendar::installSchema();
 ColemanMessage::installSchema();
-foreach (array('calendar.tpl', 'calendar-exchange.tpl', 'settings.tpl', 'message.tpl') as $template) {
+ColemanApplication::installSchema();
+foreach (array('calendar.tpl', 'calendar-exchange.tpl', 'settings.tpl', 'message.tpl', 'applications.tpl', 'application.tpl') as $template) {
     Context::getContext()->smarty->clearCompiledTemplate(_PS_MODULE_DIR_.'colemanstay/views/templates/admin/'.$template);
 }

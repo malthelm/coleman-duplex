@@ -9,7 +9,7 @@ if (form) {
   const guestsLabel = document.querySelector('#trip-guests');
   const dateFormat = new Intl.DateTimeFormat(document.documentElement.lang, {month: 'short', day: 'numeric'});
   const updateTrip = () => {
-    datesLabel.textContent = arrival.value && departure.value
+    datesLabel.textContent = arrival && departure && arrival.value && departure.value
       ? [arrival.value, departure.value].map(value => dateFormat.format(new Date(value + 'T12:00:00'))).join(' – ')
       : datesLabel.dataset.empty;
     const guests = Number(form.elements.guests.value);
@@ -19,7 +19,7 @@ if (form) {
   };
   form.addEventListener('input', updateTrip);
   updateTrip();
-  arrival.addEventListener('change', () => {
+  if (arrival && departure) arrival.addEventListener('change', () => {
     if (arrival.value) {
       const day = new Date(arrival.value + 'T12:00:00Z');
       day.setUTCDate(day.getUTCDate() + 1);

@@ -3,9 +3,9 @@
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex,nofollow">
-<title>{if $host_view == 'calendar'}{l s='Availability' mod='colemanstay'}{elseif $host_view == 'message'}{l s='Guest message' mod='colemanstay'}{elseif $host_view == 'settings'}{l s='Rental details' mod='colemanstay'}{else}{l s='Booking requests' mod='colemanstay'}{/if} · 560 Coleman</title>
+<title>{if $host_view == 'applications' || $host_view == 'application'}{l s='Applications' mod='colemanstay'}{elseif $host_view == 'calendar'}{l s='Availability' mod='colemanstay'}{elseif $host_view == 'message'}{l s='Guest message' mod='colemanstay'}{elseif $host_view == 'settings'}{l s='Rental details' mod='colemanstay'}{else}{l s='Booking requests' mod='colemanstay'}{/if} · 560 Coleman</title>
 <link rel="stylesheet" href="/modules/colemanstay/views/css/tokens.css">
-<link rel="stylesheet" href="/modules/colemanstay/views/css/requests.css?v=4">
+<link rel="stylesheet" href="/modules/colemanstay/views/css/requests.css?v=5">
 <script src="/modules/colemanstay/views/js/requests.js?v=3" defer></script>
 </head>
 <body>
@@ -16,13 +16,14 @@
 <nav aria-label="{l s='Host navigation' mod='colemanstay'}"><a href="/">{l s='View website' mod='colemanstay'}<svg class="icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M6 18 18 6M6 6h12v12"/></svg></a><a href="{$inbox_url|escape:'html':'UTF-8'}&amp;logout=1">{l s='Sign out' mod='colemanstay'}</a></nav>
 </header>
 <main id="main" class="wrap">
-<nav class="host-sections" aria-label="{l s='Host sections' mod='colemanstay'}"><a href="{$inbox_url|escape:'html':'UTF-8'}"{if $host_view == 'requests' || $host_view == 'message'} aria-current="page"{/if}>{l s='Requests' mod='colemanstay'}</a><a href="{$inbox_url|escape:'html':'UTF-8'}&amp;view=calendar"{if $host_view == 'calendar'} aria-current="page"{/if}>{l s='Availability' mod='colemanstay'}</a><a href="{$inbox_url|escape:'html':'UTF-8'}&amp;view=settings"{if $host_view == 'settings'} aria-current="page"{/if}>{l s='Rental details' mod='colemanstay'}</a></nav>
+<nav class="host-sections" aria-label="{l s='Host sections' mod='colemanstay'}"><a href="{$inbox_url|escape:'html':'UTF-8'}"{if $host_view == 'requests' || $host_view == 'message'} aria-current="page"{/if}>{l s='Requests' mod='colemanstay'}</a><a href="{$inbox_url|escape:'html':'UTF-8'}&amp;view=applications"{if $host_view == 'applications' || $host_view == 'application'} aria-current="page"{/if}>{l s='Applications' mod='colemanstay'}</a><a href="{$inbox_url|escape:'html':'UTF-8'}&amp;view=calendar"{if $host_view == 'calendar'} aria-current="page"{/if}>{l s='Availability' mod='colemanstay'}</a><a href="{$inbox_url|escape:'html':'UTF-8'}&amp;view=settings"{if $host_view == 'settings'} aria-current="page"{/if}>{l s='Rental details' mod='colemanstay'}</a></nav>
 {if $host_view == 'requests'}
 <div class="page-heading"><h1>{l s='Booking requests' mod='colemanstay'}</h1><p>{l s='A little closer to their stay in Highland Park.' mod='colemanstay'}</p></div>
 <p class="review-note">{l s='Approval starts follow-up. Use Reserve dates on an approved request to block its nights. No email or payment is sent.' mod='colemanstay'}</p>
 {/if}
 {foreach $review_errors as $error}<div class="notice error" role="alert">{$error|escape:'html':'UTF-8'}</div>{/foreach}
-{if $notice == 'approved'}<div class="notice success" role="status">{l s='Request approved. Contact the guest to arrange the next steps.' mod='colemanstay'}</div>
+{if $notice == 'application_saved'}<div class="notice success" role="status">{l s='Application progress saved. No message has been sent.' mod='colemanstay'}</div>
+{elseif $notice == 'approved'}<div class="notice success" role="status">{l s='Request approved. Contact the guest to arrange the next steps.' mod='colemanstay'}</div>
 {elseif $notice == 'declined'}<div class="notice success" role="status">{l s='Request declined. You can find it in Declined and move it back to pending.' mod='colemanstay'}</div>
 {elseif $notice == 'reserved'}<div class="notice success" role="status">{l s='Dates reserved in the private demo calendar. No guest message has been sent.' mod='colemanstay'}</div>
 {elseif $notice == 'released'}<div class="notice success" role="status">{l s='Dates released. The request is back in Approved for follow-up.' mod='colemanstay'}</div>
@@ -32,7 +33,9 @@
 {elseif $notice == 'blocked'}<div class="notice success" role="status">{l s='Dates blocked. Requests for those nights will not be accepted.' mod='colemanstay'}</div>
 {elseif $notice == 'unblocked'}<div class="notice success" role="status">{l s='Date block released.' mod='colemanstay'}</div>
 {elseif $notice == 'pending'}<div class="notice success" role="status">{l s='Request moved back to pending.' mod='colemanstay'}</div>{/if}
-{if $host_view == 'calendar'}{include file='./calendar.tpl'}
+{if $host_view == 'applications'}{include file='./applications.tpl'}
+{elseif $host_view == 'application'}{include file='./application.tpl'}
+{elseif $host_view == 'calendar'}{include file='./calendar.tpl'}
 {elseif $host_view == 'settings'}{include file='./settings.tpl'}
 {elseif $host_view == 'message'}{include file='./message.tpl'}
 {else}

@@ -5,6 +5,7 @@ require_once __DIR__.'/classes/ColemanRequest.php';
 require_once __DIR__.'/classes/ColemanCalendar.php';
 require_once __DIR__.'/classes/ColemanMessage.php';
 require_once __DIR__.'/classes/ColemanIcal.php';
+require_once __DIR__.'/classes/ColemanApplication.php';
 
 /** A direct-request storefront for two apartments; no payment or reservation creation. */
 class ColemanStay extends Module
@@ -41,6 +42,7 @@ class ColemanStay extends Module
         $this->upgradeRequestReviewSchema();
         ColemanCalendar::installSchema();
         ColemanMessage::installSchema();
+        ColemanApplication::installSchema();
         if (!Tab::getIdFromClassName('AdminColemanRequests')) {
             $tab = new Tab();
             $tab->class_name = 'AdminColemanRequests';

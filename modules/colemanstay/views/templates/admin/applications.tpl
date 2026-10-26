@@ -1,0 +1,17 @@
+<div class="page-heading"><h1>{l s='Rental applications' mod='colemanstay'}</h1><p>{l s='From a first enquiry to move-in, one step at a time.' mod='colemanstay'}</p></div>
+<p class="review-note">{l s='These are long-term enquiries. Progress stages do not reserve dates, approve screening or create a lease.' mod='colemanstay'}</p>
+<nav class="filters" aria-label="{l s='Application stages' mod='colemanstay'}">
+<a href="{$inbox_url|escape:'html':'UTF-8'}&amp;view=applications"{if $application_filter == 'all'} aria-current="page"{/if}>{l s='All' mod='colemanstay'} <span class="count">{$application_counts.all|intval}</span></a>
+{foreach $application_labels as $key => $label}<a href="{$inbox_url|escape:'html':'UTF-8'}&amp;view=applications&amp;stage={$key|escape:'html':'UTF-8'}"{if $application_filter == $key} aria-current="page"{/if}>{$label|escape:'html':'UTF-8'} <span class="count">{$application_counts[$key]|intval}</span></a>{/foreach}
+</nav>
+<section class="request-list" aria-label="{l s='Rental enquiries' mod='colemanstay'}">
+{foreach $applications as $entry}
+<article class="request">
+<div class="request-heading"><div><h2><a href="{$inbox_url|escape:'html':'UTF-8'}&amp;view=application&amp;application_id={$entry.id_coleman_application|intval}">{$entry.guest_name|escape:'html':'UTF-8'}</a></h2><p class="reference">CA-{$entry.id_coleman_application|string_format:'%05d'|escape:'html':'UTF-8'} · {if $entry.id_product == $application_one}{l s='Apartment One · 560' mod='colemanstay'}{else}{l s='Apartment Two · 562' mod='colemanstay'}{/if}</p></div><span class="status pending">{$application_labels[$entry.stage]|escape:'html':'UTF-8'}</span></div>
+<div class="application-summary"><span>{l s='Move-in' mod='colemanstay'}: {if $entry.move_in}{$entry.move_in|date_format:'%b %e, %Y'|escape:'html':'UTF-8'}{else}{l s='Flexible' mod='colemanstay'}{/if}</span><span>{$entry.duration|escape:'html':'UTF-8'}</span><span>{$entry.occupants|intval} {l s='occupants' mod='colemanstay'}</span></div>
+<p class="application-next"><strong>{l s='Next action' mod='colemanstay'}</strong> · {if $entry.next_action}{$entry.next_action|escape:'html':'UTF-8'}{else}{l s='Review the enquiry and decide the next step.' mod='colemanstay'}{/if}</p>
+<a class="draft-link" href="{$inbox_url|escape:'html':'UTF-8'}&amp;view=application&amp;application_id={$entry.id_coleman_application|intval}">{l s='View application' mod='colemanstay'}</a>
+</article>
+{foreachelse}<div class="empty"><h2>{l s='A new home starts with a conversation' mod='colemanstay'}</h2><p>{l s='Long-term enquiries will appear here. Share the rental enquiry form to get started.' mod='colemanstay'}</p><a href="/?request_kind=rental#request">{l s='View rental enquiry form' mod='colemanstay'}</a></div>{/foreach}
+</section>
+{if $application_pages > 1}<nav class="pagination" aria-label="{l s='Application pages' mod='colemanstay'}">{if $application_page > 1}<a href="{$inbox_url|escape:'html':'UTF-8'}&amp;view=applications&amp;stage={$application_filter|escape:'html':'UTF-8'}&amp;page={$application_page-1}">{l s='Previous' mod='colemanstay'}</a>{/if}<span>{l s='Page' mod='colemanstay'} {$application_page|intval} / {$application_pages|intval}</span>{if $application_page < $application_pages}<a href="{$inbox_url|escape:'html':'UTF-8'}&amp;view=applications&amp;stage={$application_filter|escape:'html':'UTF-8'}&amp;page={$application_page+1}">{l s='Next' mod='colemanstay'}</a>{/if}</nav>{/if}

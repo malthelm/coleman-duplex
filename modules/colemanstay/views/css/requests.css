@@ -96,7 +96,7 @@ h3 { font-size: 14px; font-weight: 600; margin: 0 0 8px; }
 .reservation-form { max-width: 60ch; margin-top: 12px; }
 .reservation-form p { font-size: 13px; }
 .host-form label, .calendar-picker label { display: block; font-size: 14px; font-weight: 600; margin-bottom: 20px; }
-.host-form input:not([type=checkbox]):not([type=hidden]), .host-form textarea, .calendar-picker input, .calendar-picker select { display: block; width: 100%; min-height: 48px; margin-top: 8px; padding: 10px 12px; border: 1px solid var(--control-line); border-radius: var(--radius-control); font: 16px/1.5 var(--font-ui); background: var(--surface); color: var(--text-primary); caret-color: var(--brand); }
+.host-form input:not([type=checkbox]):not([type=hidden]), .host-form textarea, .host-form select, .calendar-picker input, .calendar-picker select { display: block; width: 100%; min-height: 48px; margin-top: 8px; padding: 10px 12px; border: 1px solid var(--control-line); border-radius: var(--radius-control); font: 16px/1.5 var(--font-ui); background: var(--surface); color: var(--text-primary); caret-color: var(--brand); }
 .host-form textarea { resize: vertical; }
 .host-form fieldset { border: 0; padding: 0; margin: 0; min-width: 0; }
 .host-form fieldset:disabled { opacity: .75; }
@@ -180,3 +180,14 @@ h3 { font-size: 14px; font-weight: 600; margin: 0 0 8px; }
 @media (max-width: 700px) {
   .exchange-layout { grid-template-columns: minmax(0, 1fr); gap: 32px; }
 }
+
+.application-summary { display: flex; flex-wrap: wrap; gap: 12px 28px; margin-block: 20px; color: var(--text-secondary); }
+.application-next { padding-top: 16px; border-top: 1px solid var(--line); overflow-wrap: anywhere; }
+.application-progress { margin-block: 28px 40px; }
+.application-progress textarea { min-height: 140px; }
+.application-history { margin-block: 40px; }
+.application-history ol { padding: 0; list-style: none; }
+.application-history li { padding-block: 20px; border-top: 1px solid var(--line); }
+.application-history p, .application-text { white-space: pre-wrap; overflow-wrap: anywhere; }
+.application-history time { font-size: 13px; color: var(--text-secondary); }
+.application-context { overflow-wrap: anywhere; }

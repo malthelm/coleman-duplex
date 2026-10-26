@@ -3,7 +3,7 @@
 QloApps fork for two apartments at 560 Coleman Avenue, Highland Park, Los Angeles.
 Upstream base: `10251e3591f4e0528a34e1bcf99c30594a93055a` (`develop`). This is a preview based on an unreleased upstream revision; review/pin a suitable stable release before public use.
 
-The `colemanstay` module supplies the website, apartment pages, validated request form and authenticated **Stay requests** inbox. It uses an additive ObjectModel/table and does not modify core QloApps. Short stays and longer enquiries use the same dates form. Submitting a request does not reserve dates, create orders, send email or charge guests. Hosts can separately reserve approved requests in the custom calendar; native QloApps inventory remains separate. Native apartments remain inactive drafts; zero prices and internal capacity/time values are software placeholders, never advertised rates or policies.
+The `colemanstay` module supplies the website, apartment pages, validated request form and authenticated **Stay requests** inbox. It uses an additive ObjectModel/table and does not modify core QloApps. Short stays use exact dates; long-term enquiries use a separate form with an optional approximate move-in date and intended duration. Submitting a request does not reserve dates, create orders, send email or charge guests. Hosts can separately reserve approved requests in the custom calendar; native QloApps inventory remains separate. Native apartments remain inactive drafts; zero prices and internal capacity/time values are software placeholders, never advertised rates or policies.
 
 ## Build and first installation
 
@@ -99,4 +99,15 @@ Verified against the date and event semantics in [RFC 5545](https://www.rfc-edit
 
 The installed `test-ical.php` check uses temporary tables for parser rejection, signed previews, import idempotency and batch rollback, export privacy, manual release, native permissions and template rendering.
 
-See [the RentSpree feature review](rentspree-review.md) for longer-term tenancy recommendations; these remain proposals rather than newly implemented features.
+See [the combined implementation goal](implementation-goal.md) for the authorized direct-booking and RentSpree-inspired roadmap.
+
+
+## Long-term enquiries and application progress
+
+The guest request panel now offers **Short stay** and **Long-term rental**. The rental form accepts an optional approximate move-in date, intended duration, occupants, pets and contact details. It creates a `CA-` enquiry in **Applications**, not a `CD-` stay request. It does not check or reserve an exact date range. The host must still agree dates, capacity and terms before any commitment.
+
+The host Applications tab lists enquiries by stage. Each detail page has a next action and append-only private notes/history. Stages are enquiry, viewing, application, review, lease, move-in and closed; hosts can reopen a closed enquiry. These are tracking labels, not proof of completed screening, a signed lease or a reservation. Edits require native host edit permission and CSRF protection, and stale submissions cannot overwrite newer progress.
+
+This first release provides enquiry intake and host tracking. A fuller applicant-submitted application, private lease uploads, signature tracking, rent ledger, maintenance portal and external providers remain later work in the combined goal. No sensitive screening documents should be entered into notes.
+
+Run `php deployment/coleman/test-applications.php` in the installed runtime. It uses connection-local temporary tables and covers optional dates, progress/history, stale submissions, permissions, property scope, template rendering and invalid guest input. The additive migration creates two application tables; a code rollback leaves their records intact but temporarily hides the feature. Never restore an older database over newer enquiries without reconciliation.

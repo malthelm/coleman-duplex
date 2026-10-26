@@ -1,6 +1,6 @@
 # RentSpree features worth borrowing
 
-Reviewed 2026-10-26. Recommendation only; these features are not newly implemented or added to the delivery commitment. Coleman remains private on Winona, direct booking first, with owner terms undecided.
+Reviewed 2026-10-26. Malthe subsequently requested an implementation goal for the five recommended features and confirmed that he meant RentSpree. The agreed scope and acceptance criteria are in [rentspree-implementation-goal.md](rentspree-implementation-goal.md). These features are not yet implemented. Coleman remains private on Winona, direct booking first, with owner terms undecided.
 
 RentSpree covers the longer-term rental lifecycle: listing distribution, applications, screening, leases, rent collection and financial records. Its main value for Coleman is the workflow around a tenancy, alongside the short-stay availability calendar.
 

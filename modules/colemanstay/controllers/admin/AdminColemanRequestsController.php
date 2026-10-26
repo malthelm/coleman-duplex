@@ -3,6 +3,7 @@ require_once _PS_MODULE_DIR_.'colemanstay/classes/ColemanRequest.php';
 require_once _PS_MODULE_DIR_.'colemanstay/classes/ColemanCalendar.php';
 require_once _PS_MODULE_DIR_.'colemanstay/classes/ColemanMessage.php';
 require_once _PS_MODULE_DIR_.'colemanstay/classes/ColemanIcal.php';
+require_once _PS_MODULE_DIR_.'colemanstay/classes/ColemanApplication.php';
 /** A focused host inbox using native employee authentication and permissions. */
 class AdminColemanRequestsController extends ModuleAdminController
 {
@@ -23,7 +24,7 @@ class AdminColemanRequestsController extends ModuleAdminController
     public function initProcess()
     {
         $view = Tools::getValue('view', 'requests');
-        if (is_string($view) && in_array($view, array('requests', 'calendar', 'settings', 'message'), true)) { $this->hostView = $view; }
+        if (is_string($view) && in_array($view, array('requests', 'calendar', 'settings', 'message', 'applications', 'application'), true)) { $this->hostView = $view; }
         $this->action = '';
         $this->ajax = false;
         $filter = Tools::getValue('status', 'pending');
@@ -43,19 +44,23 @@ class AdminColemanRequestsController extends ModuleAdminController
         }
         $decision = Tools::getValue('decision');
         $id = $decision === 'unblocked' ? Tools::getValue('block_id') : Tools::getValue('request_id', Tools::getValue('id_product', ''));
+        if ($decision === 'application_saved') { $id = Tools::getValue('application_id'); }
         $revision = Tools::getValue('revision', '0');
         $this->formValues = array();
-        foreach (array('id_product', 'nightly_rate', 'monthly_rate', 'cleaning_fee', 'min_nights', 'max_guests', 'house_rules', 'owner_confirmed', 'arrival', 'departure', 'label', 'subject', 'body', 'import_label') as $field) {
+        foreach (array('id_product', 'nightly_rate', 'monthly_rate', 'cleaning_fee', 'min_nights', 'max_guests', 'house_rules', 'owner_confirmed', 'arrival', 'departure', 'label', 'subject', 'body', 'import_label', 'stage', 'next_action', 'note') as $field) {
             $value = Tools::getValue($field, '');
             $this->formValues[$field] = is_string($value) ? trim($value) : $value;
         }
         try {
             if (!is_string($id) || !ctype_digit($id) || (int)$id < 1 || !is_string($revision) || !ctype_digit($revision)
-                || !is_string($decision) || !in_array($decision, array('approved', 'declined', 'pending', 'reserved', 'released', 'settings_saved', 'blocked', 'unblocked', 'draft_saved', 'draft_download', 'calendar_export', 'calendar_preview', 'calendar_imported'), true)) {
+                || !is_string($decision) || !in_array($decision, array('approved', 'declined', 'pending', 'reserved', 'released', 'settings_saved', 'blocked', 'unblocked', 'draft_saved', 'draft_download', 'calendar_export', 'calendar_preview', 'calendar_imported', 'application_saved'), true)) {
                 throw new DomainException('invalid');
             }
             $actor = (int)$this->context->employee->id;
-            if ($decision === 'calendar_export') {
+            if ($decision === 'application_saved') {
+                ColemanApplication::progress((int)$id, (int)$revision, $this->formValues['stage'], $this->formValues['next_action'], $this->formValues['note'], $actor);
+                $this->hostView = 'application';
+            } elseif ($decision === 'calendar_export') {
                 $ical = ColemanIcal::export((int)$id);
                 header('Cache-Control: no-store, private'); header('Content-Type: text/calendar; charset=UTF-8');
                 header('Content-Disposition: attachment; filename="coleman-apartment-'.(int)$id.'.ics"');
@@ -96,6 +101,8 @@ class AdminColemanRequestsController extends ModuleAdminController
             }
         } catch (DomainException $error) {
             $messages = array(
+                'application_fields' => $this->l('Choose a valid application stage. Use plain text for the next action (up to 250 characters) and note (up to 4,000 characters).'),
+                'application_stale' => $this->l('This application changed. Reload and review its current progress before saving again. Your entries are still below.'),
                 'ical_file' => $this->l('Choose a valid iCalendar file up to 512 KB and 500 events. No dates were imported.'),
                 'ical_dates' => $this->l('The calendar contains invalid date ranges. No dates were imported.'),
                 'ical_unsupported' => $this->l('This import accepts non-recurring, all-day events. Timed events, recurrence rules and invitation updates are not supported. No dates were imported.'),
@@ -118,7 +125,7 @@ class AdminColemanRequestsController extends ModuleAdminController
                 'confirm' => $this->l('Tick the confirmation box before reserving or releasing dates.'),
                 'stale' => $this->l('This request has changed or is no longer available. Review its current status before trying again.'),
             );
-            http_response_code(in_array($error->getMessage(), array('overlap', 'stale', 'message_stale', 'draft_stale'), true) ? 409 : 400);
+            http_response_code(in_array($error->getMessage(), array('overlap', 'stale', 'message_stale', 'draft_stale', 'application_stale'), true) ? 409 : 400);
             $this->errors[] = $messages[$error->getMessage()] ?? $messages['invalid'];
             return;
         } catch (Throwable $error) {
@@ -131,6 +138,7 @@ class AdminColemanRequestsController extends ModuleAdminController
         $this->context->cookie->write();
         $returnUrl = $this->context->link->getAdminLink('AdminColemanRequests').'&status='.$this->requestFilter.'&view='.$this->hostView;
         if ($this->hostView === 'message') { $returnUrl .= '&request_id='.(int)$id; }
+        if ($this->hostView === 'application') { $returnUrl .= '&application_id='.(int)$id; }
         if ($this->hostView === 'calendar') {
             $returnUrl .= '&id_product='.(int)Tools::getValue('id_product');
             $month = Tools::getValue('month');
@@ -175,8 +183,48 @@ class AdminColemanRequestsController extends ModuleAdminController
             'review_errors' => $this->errors, 'notice' => $notice,
             'status_labels' => array('pending' => $this->l('Pending'), 'approved' => $this->l('Approved'), 'reserved' => $this->l('Reserved'), 'declined' => $this->l('Declined'), 'all' => $this->l('All requests')),
         ));
-        if ($this->hostView === 'message') { $this->initMessageContent(); }
+        if ($this->hostView === 'applications' || $this->hostView === 'application') { $this->initApplicationContent(); }
+        elseif ($this->hostView === 'message') { $this->initMessageContent(); }
         elseif ($this->hostView !== 'requests') { $this->initApartmentContent(); }
+    }
+
+    /** Render bounded application lists and one private host progress/history view. */
+    private function initApplicationContent()
+    {
+        $db = Db::getInstance();
+        $labels = array('enquiry' => $this->l('Enquiry'), 'viewing' => $this->l('Viewing'),
+            'application' => $this->l('Application'), 'review' => $this->l('Review'), 'lease' => $this->l('Lease'),
+            'move_in' => $this->l('Move-in'), 'closed' => $this->l('Closed'));
+        $stage = Tools::getValue('stage', 'all');
+        if (!is_string($stage) || !in_array($stage, array_merge(array('all'), ColemanApplication::stages()), true)) { $stage = 'all'; }
+        $counts = array_fill_keys(array_merge(array('all'), ColemanApplication::stages()), 0);
+        foreach ($db->executeS('SELECT stage, COUNT(*) AS total FROM `'._DB_PREFIX_.'coleman_application` WHERE '.ColemanApplication::scope().' GROUP BY stage', true, false) as $row) {
+            $counts[$row['stage']] = (int)$row['total']; $counts['all'] += (int)$row['total'];
+        }
+        $pages = max(1, (int)ceil($counts[$stage] / 20));
+        $page = Tools::getValue('page', '1');
+        $page = is_string($page) && ctype_digit($page) ? max(1, min($pages, (int)$page)) : 1;
+        $rows = $db->executeS('SELECT * FROM `'._DB_PREFIX_.'coleman_application` WHERE '.ColemanApplication::scope()
+            .($stage === 'all' ? '' : " AND stage='".pSQL($stage)."'").' ORDER BY date_add DESC, id_coleman_application DESC LIMIT '.(($page - 1) * 20).',20', true, false);
+        $selected = null; $history = array(); $form = array();
+        if ($this->hostView === 'application') {
+            $id = Tools::getValue('application_id', '');
+            try {
+                if (!is_string($id) || !ctype_digit($id)) { throw new DomainException('application_missing'); }
+                $selected = ColemanApplication::application((int)$id);
+                $form = array('stage' => $selected['stage'], 'next_action' => $selected['next_action'], 'note' => '', 'revision' => $selected['revision']);
+                $history = $db->executeS('SELECT stage, next_action, note, employee_id, date_add FROM `'._DB_PREFIX_.'coleman_application_history` WHERE application_id='.(int)$id.' ORDER BY id_coleman_application_history DESC LIMIT 100', true, false);
+                if ($this->errors && Tools::getValue('decision') === 'application_saved') {
+                    foreach (array('stage', 'next_action', 'note', 'revision') as $key) {
+                        $value = Tools::getValue($key, ''); $form[$key] = is_string($value) ? $value : '';
+                    }
+                }
+            } catch (DomainException $error) { http_response_code(404); }
+        }
+        $this->context->smarty->assign(array('application_labels' => $labels, 'application_filter' => $stage,
+            'application_counts' => $counts, 'applications' => $rows, 'application' => $selected, 'application_history' => $history,
+            'application_form' => $form, 'application_page' => $page, 'application_pages' => $pages,
+            'application_one' => (int)Configuration::get('COLEMAN_PRODUCT_ONE')));
     }
 
     /** Build one editable reply using the current decision and preserve saved host wording. */

@@ -22,10 +22,11 @@ class ColemanstayStayModuleFrontController extends ModuleFrontController
             $id = (int)Configuration::get($setting);
             if ($id) { $this->apartments[$key] = $id; }
         }
-        foreach (array('apartment', 'guest_name', 'email', 'arrival', 'departure', 'guests', 'message') as $key) {
+        foreach (array('apartment', 'guest_name', 'email', 'arrival', 'departure', 'guests', 'message', 'move_in', 'duration', 'pets') as $key) {
             $value = Tools::getValue($key, '');
             $this->form[$key] = is_string($value) ? trim($value) : '';
         }
+        $this->form['request_kind'] = Tools::getValue('request_kind') === 'rental' ? 'rental' : 'stay';
     }
 
     /** Validate an ISO date without accepting normalised invalid calendar dates. */
@@ -53,14 +54,23 @@ class ColemanstayStayModuleFrontController extends ModuleFrontController
             return;
         }
         $f = $this->form;
+        $rentalEnquiry = ($f['request_kind'] ?? 'stay') === 'rental';
         $today = new DateTimeImmutable('today', new DateTimeZone('America/Los_Angeles'));
         if (!isset($this->apartments[$f['apartment']])) { $this->requestErrors[] = $this->module->l('Choose an apartment.', 'stay'); }
         if (!$f['guest_name'] || mb_strlen($f['guest_name']) > 120 || !Validate::isGenericName($f['guest_name'])) { $this->requestErrors[] = $this->module->l('Enter your name using plain text, up to 120 characters.', 'stay'); }
         if (strlen($f['email']) > 254 || !Validate::isEmail($f['email'])) { $this->requestErrors[] = $this->module->l('Enter a valid email address.', 'stay'); }
-        if (!$this->validDate($f['arrival']) || !$this->validDate($f['departure'])
+        if (!$rentalEnquiry && (!$this->validDate($f['arrival']) || !$this->validDate($f['departure'])
             || $f['arrival'] < $today->format('Y-m-d') || $f['departure'] <= $f['arrival']
-            || $f['departure'] > $today->modify('+2 years')->format('Y-m-d')) {
+            || $f['departure'] > $today->modify('+2 years')->format('Y-m-d'))) {
             $this->requestErrors[] = $this->module->l('Choose a future stay within the next two years, with departure after arrival.', 'stay');
+        }
+        if ($rentalEnquiry) {
+            if ($f['move_in'] !== '' && (!$this->validDate($f['move_in']) || $f['move_in'] < $today->format('Y-m-d') || $f['move_in'] > $today->modify('+2 years')->format('Y-m-d'))) {
+                $this->requestErrors[] = $this->module->l('Choose an approximate move-in date within the next two years, or leave it blank if undecided.', 'stay');
+            }
+            if (!ColemanApplication::validText($f['duration'], 80, true) || !ColemanApplication::validText($f['pets'], 500, true)) {
+                $this->requestErrors[] = $this->module->l('Describe your intended duration (up to 80 characters) and pets (up to 500 characters) using plain text. Write “None” if you have no pets.', 'stay');
+            }
         }
         if (!ctype_digit($f['guests']) || (int)$f['guests'] < 1 || (int)$f['guests'] > 8) { $this->requestErrors[] = $this->module->l('Enter between 1 and 8 guests. Capacity will be confirmed by the host.', 'stay'); }
         if (mb_strlen($f['message']) > 2000 || !Validate::isCleanHtml($f['message']) || $f['message'] !== strip_tags($f['message'])) { $this->requestErrors[] = $this->module->l('Use plain text in your message, up to 2,000 characters.', 'stay'); }
@@ -72,6 +82,26 @@ class ColemanstayStayModuleFrontController extends ModuleFrontController
         }
         if ($this->requestErrors) { if (http_response_code() < 400) { http_response_code(422); } return; }
         try {
+            if ($rentalEnquiry) {
+                // The same token cannot create both a short-stay request and a rental enquiry.
+                if (Db::getInstance()->getValue('SELECT id_coleman_request FROM `'._DB_PREFIX_."coleman_request` WHERE request_token='".pSQL($token)."'", false)) { throw new DomainException('used_token'); }
+                $existing = Db::getInstance()->getValue('SELECT id_coleman_application FROM `'._DB_PREFIX_."coleman_application` WHERE request_token='".pSQL($token)."'", false);
+                if (!$existing) {
+                    $application = new ColemanApplication();
+                    $application->id_product = $this->apartments[$f['apartment']];
+                    foreach (array('guest_name', 'email', 'duration', 'pets', 'message') as $key) { $application->$key = $f[$key]; }
+                    $application->move_in = $f['move_in'] === '' ? null : $f['move_in'];
+                    $application->occupants = (int)$f['guests'];
+                    $application->request_token = $token;
+                    if (!$application->add(true, true)) { throw new RuntimeException('Application persistence failed'); }
+                    $existing = $application->id;
+                    $_SESSION['submissions'][] = time();
+                }
+                $_SESSION['receipt'] = sprintf('CA-%05d', $existing);
+                header('Location: /?request_kind=rental&sent=1#request', true, 303);
+                exit;
+            }
+            if (Db::getInstance()->getValue('SELECT id_coleman_application FROM `'._DB_PREFIX_."coleman_application` WHERE request_token='".pSQL($token)."'", false)) { throw new DomainException('used_token'); }
             $existing = Db::getInstance()->getValue('SELECT id_coleman_request FROM `'._DB_PREFIX_."coleman_request` WHERE request_token='".pSQL($token)."'");
             if (!$existing) {
                 $unitId = $this->apartments[$f['apartment']];
@@ -94,9 +124,11 @@ class ColemanstayStayModuleFrontController extends ModuleFrontController
             exit;
         } catch (DomainException $e) {
             http_response_code(422);
-            $this->requestErrors[] = $e->getMessage() === 'unavailable'
+            $this->requestErrors[] = $e->getMessage() === 'used_token'
+                ? $this->module->l('This form was already submitted. Reload the page to start another enquiry.', 'stay')
+                : ($e->getMessage() === 'unavailable'
                 ? $this->module->l('Those nights are unavailable. Please choose different dates or another apartment.', 'stay')
-                : $this->module->l('Please check the apartment’s minimum stay and maximum guests, then update your request.', 'stay');
+                : $this->module->l('Please check the apartment’s minimum stay and maximum guests, then update your request.', 'stay'));
         } catch (Exception $e) {
             error_log('Coleman request save failed: '.get_class($e));
             http_response_code(503);
