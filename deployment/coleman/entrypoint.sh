@@ -13,5 +13,9 @@ fi
 if [ -d /var/www/html/install-dev ]; then
     mv /var/www/html/install-dev /var/www/html/install-cli
 fi
+# Production Smarty does not check template timestamps. Invalidate only our view.
+if [ -f /var/www/html/config/settings.inc.php ]; then
+    php -r '$_SERVER["HTTP_HOST"] = getenv("DEMO_DOMAIN"); require "/var/www/html/config/config.inc.php"; Context::getContext()->smarty->clearCompiledTemplate(_PS_MODULE_DIR_."colemanstay/views/templates/front/stay.tpl");'
+fi
 chown -R www-data:www-data /var/www/html
 exec docker-php-entrypoint "$@"
