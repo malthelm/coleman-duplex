@@ -24,7 +24,7 @@ php deployment/coleman/seed.php
 
 The installer refuses an existing settings file and never clears the database. The seed creates one draft property and two draft apartments; repeated completed runs do not duplicate them. If first installation fails mid-step, inspect the error and preserve the partial database before recovery. Do not blindly reinstall.
 
-Host login: `/host-admin/`, account `host@coleman.example`, password from the private deployment environment. No default password is committed. The inbox is read-only; any future approval/payment workflow needs a separate implementation.
+Host login: `/host-admin/`, account `host@coleman.example`, password from the private deployment environment. No default password is committed. The branded inbox is at `/host-admin/index.php?controller=AdminColemanRequests`. Hosts with edit permission can approve, decline, or move a request back to pending. Decisions record the employee, timestamp and revision; stale submissions cannot overwrite a newer decision. Approval is for follow-up only: dates remain unreserved, and messages/payments are not sent. Use the status filters to find reviewed requests. Advanced QloApps settings remain available from the footer.
 
 ## VPS migration
 
@@ -34,7 +34,7 @@ Host login: `/host-admin/`, account `host@coleman.example`, password from the pr
 4. Put an HTTPS reverse proxy in front of the loopback web port. Forward the real Host and `X-Forwarded-Proto: https`. Update QloApps shop domain/SSL domain and base URL to the new hostname, clear application caches, and test redirects, login and request persistence before switching DNS.
 5. Keep the old instance and backup until restore tests pass. Avoid running two writable copies during cutover.
 
-Before public booking, replace concept imagery with actual property photos and confirm apartment details, rates, availability, terms and applicable rental requirements. Add reviewed notifications and abuse controls for public traffic. This demo's session-based throttle is intended for private testing, not a public anti-spam service.
+Before public booking, confirm permission to use the listing photos and confirm apartment details, rates, availability, terms and applicable rental requirements. Add reviewed notifications and abuse controls for public traffic. This demo's session-based throttle is intended for private testing, not a public anti-spam service.
 
 ## Updates and rollback
 
@@ -47,3 +47,17 @@ Classic rental-listing layout: white background, dark sans-serif typography, cor
 The site now uses two real rental-listing photographs: `560-lower-kitchen.jpg` for Apartment One (560, lower) and `562-upper-kitchen.jpg` for Apartment Two (562, upper). Source pages explicitly distinguish the units; each detail page links its source. See `modules/colemanstay/views/img/PHOTO-SOURCES.md` for original URLs and asset provenance. The Docker build downloads and verifies these two images; they are excluded from the public Git repository. These third-party photographs are not covered by the code’s open-source license. The original concept asset remains in the repository for history but is no longer rendered.
 
 The fork retains upstream license notices. Custom additions use OSL-3.0. A visible source link points to this fork.
+
+## Ownership and future platform integrations
+
+This is a GitHub fork of `Qloapps/QloApps` at https://github.com/malthelm/coleman-duplex. The deployed custom work is on `codex/coleman-demo`; `upstream` tracks QloApps. Keep custom features in `colemanstay` and preserve upstream license notices.
+
+No paid QloApps channel-manager subscription is required for this direct-request workflow. Future integrations can be implemented in this fork. Start with platform-supported iCal import/export for blocked dates, then consider direct APIs where access is available. Calendar feeds do not provide instant synchronization, messaging, pricing or payments. Before enabling availability blocking, define how host approval creates an actual reservation and how conflicting dates are handled. No external platform sync is implemented yet; each platform's access terms and charges still apply independently.
+
+Run the focused review regression check inside an installed web container:
+
+```sh
+php deployment/coleman/test-request-review.php
+```
+
+It shadows the request table with a connection-local temporary table and checks persistence, review transitions, stale submissions, CSRF, permissions, escaping and template rendering without changing live requests.

@@ -35,6 +35,7 @@ class ColemanStay extends Module
             `date_add` DATETIME NOT NULL,
             PRIMARY KEY (`id_coleman_request`), UNIQUE KEY (`request_token`)
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4')) { return false; }
+        $this->upgradeRequestReviewSchema();
         if (!Tab::getIdFromClassName('AdminColemanRequests')) {
             $tab = new Tab();
             $tab->class_name = 'AdminColemanRequests';
@@ -45,6 +46,25 @@ class ColemanStay extends Module
             if (!$tab->add()) { return false; }
         }
         return true;
+    }
+
+    /** Add review metadata without changing existing requests or reservations. */
+    public function upgradeRequestReviewSchema()
+    {
+        $db = Db::getInstance();
+        $columns = array_column($db->executeS('SHOW COLUMNS FROM `'._DB_PREFIX_.'coleman_request`'), 'Field');
+        $add = array();
+        foreach (array(
+            'status' => "VARCHAR(16) NOT NULL DEFAULT 'pending'",
+            'revision' => 'INT UNSIGNED NOT NULL DEFAULT 0',
+            'reviewed_at' => 'DATETIME NULL',
+            'reviewed_by' => 'INT UNSIGNED NULL',
+        ) as $name => $definition) {
+            if (!in_array($name, $columns, true)) { $add[] = 'ADD COLUMN `'.$name.'` '.$definition; }
+        }
+        if ($add && !$db->execute('ALTER TABLE `'._DB_PREFIX_.'coleman_request` '.implode(', ', $add))) {
+            throw new RuntimeException('Unable to add Coleman request review fields.');
+        }
     }
 
     /** Apply the storefront design tokens to the native host login. */

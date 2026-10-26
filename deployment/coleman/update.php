@@ -9,3 +9,6 @@ foreach (array('actionAdminLoginControllerSetMedia', 'actionAdminControllerSetMe
     }
 }
 Context::getContext()->smarty->clearCompiledTemplate(_PS_MODULE_DIR_.'colemanstay/views/templates/front/stay.tpl');
+
+$module->upgradeRequestReviewSchema();
+Context::getContext()->smarty->clearCompiledTemplate(_PS_MODULE_DIR_.'colemanstay/views/templates/admin/requests.tpl');
