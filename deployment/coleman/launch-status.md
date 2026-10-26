@@ -6,7 +6,7 @@ Updated 2026-10-26. Current owner direction: **direct booking first; external pl
 2. **Availability:** per-apartment calendar, manual date blocks and separate reserve/release actions implemented. Approval alone does not allocate dates. The custom ledger does not create native hotel orders, take payment or form a rental agreement.
 3. **Communication:** editable approval/decline and reserved-date confirmation drafts implemented, with saved `.eml` export and stale-request protection. Current wording is explicitly for the private demo. Actual guest delivery remains unconfigured and unverified; no automated sending is enabled. Explicit authorization is required before sending third-party messages.
 4. **Platforms:** deferred connection choices; no external sync active. Prepare supported calendar import/export before connecting actual accounts; platform access and charges remain independent of this open-source fork.
-5. **Launch:** keep the private Winona deployment. Database and site backups are required before releases. Isolated restore rehearsal, domain/VPS selection and public-launch authorization remain outstanding.
+5. **Launch:** keep the private Winona deployment. Database and site backups are required before releases. An isolated Winona restore and rollback/return rehearsal passed on 2026-10-26; see [restore-runbook.md](restore-runbook.md). Off-host backup/image transfer, domain/VPS selection, migration verification and public-launch authorization remain outstanding.
 
 ## Property-specific requirements still to establish
 

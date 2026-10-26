@@ -79,3 +79,8 @@ Reviewed requests have **Draft reply** (approved/declined) or **Draft confirmati
 If the request or another host's draft changes, stale saves/downloads are rejected. Reopened/reapproved requests retain earlier wording but require review and another save before export. Local unsaved edits disable the download button; without JavaScript, download always uses the saved wording. Drafts and exports require the native host login, edit permission and CSRF token. Current defaults explicitly describe a private demo; confirmation drafts do not invent terms, prices or a rental agreement.
 
 The message regression check uses temporary request/draft tables and verifies persistence, stale conflicts, status changes, CSRF/permissions, plain-text escaping and MIME round-trip. Mail delivery remains disabled. Before an actual guest email is sent, obtain explicit authorization for its recipient and content through the chosen sending workflow.
+
+
+## Verified recovery
+
+An isolated restore and code rollback/return rehearsal passed on Winona on 2026-10-26. See [restore-runbook.md](restore-runbook.md) for evidence, exact scope, private artifact locations and repeatable helper commands. The live site was not rolled back. Off-host transfer and VPS migration remain pending.
