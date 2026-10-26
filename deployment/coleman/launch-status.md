@@ -2,6 +2,8 @@
 
 Updated 2026-10-26. Current owner direction: **direct booking first; external platforms undecided; keep private on Winona**. Jim has not confirmed rates, minimum stay, cleaning fees, capacity, house rules or primary-residence status. Blank values are intentional.
 
+Subsequent combined-goal release: `01339e5` adds long-term enquiries and host application progress/history, deployed and verified privately on Winona. See [implementation-goal.md](implementation-goal.md) for the current merged work and evidence. The earlier completion audit below is retained as dated evidence, not the current application revision.
+
 1. **Rental details:** host editor implemented; owner confirmation outstanding. Draft details stay private. A confirmed set requires at least one rate, cleaning fee, minimum stay, capacity and rules. No guessed values should be seeded.
 2. **Availability:** per-apartment calendar, manual date blocks and separate reserve/release actions implemented. Approval alone does not allocate dates. The custom ledger does not create native hotel orders, take payment or form a rental agreement.
 3. **Communication:** editable approval/decline and reserved-date confirmation drafts implemented, with saved `.eml` export and stale-request protection. Current wording is explicitly for the private demo. Actual guest delivery remains unconfigured and unverified; no automated sending is enabled. Explicit authorization is required before sending third-party messages.

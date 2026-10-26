@@ -18,4 +18,8 @@ Extend the existing module and shared design; preserve native authentication and
 
 ## Progress
 
-- 2026-10-26: combined scope recorded; implementation started with long-term enquiry and host application tracking. No new feature deployment is claimed yet.
+- 2026-10-26: combined scope recorded. First release `01339e5` deployed through Dokploy and verified healthy on private Winona. Long-term enquiry intake and host stage/next-action/note history are implemented. Fuller applicant-submitted details and the remaining tenancy features are not yet implemented.
+- Verification: 20 new application checks plus 27 calendar and 17 request-review checks passed in the installed runtime using temporary tables. Live HTTP checked enquiry submission, native sign-in, host progress/history, stale and CSRF rejection, stage filtering and closing the synthetic example. Desktop/mobile guest views were inspected live; host views were inspected as genuine Smarty previews and exercised through live authenticated HTTP.
+- Live synthetic application `CA-00001` is closed with its verification history retained. Existing five stay requests remain pending; zero orders, zero active date blocks, zero confirmed units, mail disabled. No owner terms were invented.
+- Private rollback: `/home/winona/coleman-duplex/private/backups/applications-20261026`, including database, site, checksums and retained image tags. Previous deployed revision `d8dfc0a`. A code rollback hides applications but preserves their additive tables; do not restore an older database over newer enquiries without reconciliation.
+- Next: fuller applications and private lease/move-in records, then the rent ledger and maintenance workflow. Original launch dependencies remain outstanding.
