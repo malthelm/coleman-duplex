@@ -50,12 +50,11 @@ class ColemanStay extends Module
     /** Keep the demo request-only, including legacy checkout URLs. */
     public function hookActionDispatcher($params)
     {
+        // QloApps labels module storefronts FC_FRONT and builds class names in lowercase.
         if ($params['controller_type'] == Dispatcher::FC_FRONT
-            && $params['controller_class'] !== 'ColemanstayStayModuleFrontController') {
-            Tools::redirect('/');
-        }
-        if ($params['controller_type'] == Dispatcher::FC_MODULE && Tools::getValue('module') !== $this->name) {
-            Tools::redirect('/');
+            && strcasecmp($params['controller_class'], 'ColemanstayStayModuleFrontController') !== 0) {
+            header('Location: /', true, 302);
+            exit;
         }
     }
 }
