@@ -19,7 +19,7 @@ class ColemanRequest extends ObjectModel
         $db = Db::getInstance();
         $from = $decision === 'pending' ? "status IN ('approved', 'declined')" : "status = 'pending'";
         $sql = 'UPDATE `'._DB_PREFIX_."coleman_request` SET status = '".pSQL($decision)."', revision = revision + 1,
-            reviewed_at = NOW(), reviewed_by = ".(int)$employeeId.' WHERE id_coleman_request = '.(int)$id.' AND revision = '.(int)$revision.' AND '.$from.'
+            reviewed_at = '".pSQL(date('Y-m-d H:i:s'))."', reviewed_by = ".(int)$employeeId.' WHERE id_coleman_request = '.(int)$id.' AND revision = '.(int)$revision.' AND '.$from.'
             AND id_product IN ('.(int)Configuration::get('COLEMAN_PRODUCT_ONE').','.(int)Configuration::get('COLEMAN_PRODUCT_TWO').')';
         if (!$db->execute($sql)) { throw new RuntimeException('Unable to save request review.'); }
         return $db->Affected_Rows() === 1;

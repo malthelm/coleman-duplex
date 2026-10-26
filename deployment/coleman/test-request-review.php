@@ -38,6 +38,8 @@ $context->link = new Link('https://', 'https://');
 $controller = new AdminColemanRequestsController();
 $context->controller = $controller;
 checkReview(ColemanRequest::review($id, 0, 'approved', 1), 'approve pending request');
+$reviewedAt = $db->getValue('SELECT reviewed_at FROM `'._DB_PREFIX_.'coleman_request` WHERE id_coleman_request = '.$id);
+checkReview(abs(time() - strtotime($reviewedAt)) < 60, 'review timestamps use the application timezone');
 checkReview(!ColemanRequest::review($id, 0, 'declined', 1), 'stale form cannot overwrite decision');
 checkReview(!ColemanRequest::review($id, 1, 'declined', 1), 'decided request must be reopened');
 checkReview(ColemanRequest::review($id, 1, 'pending', 1), 'reopen approved request');
