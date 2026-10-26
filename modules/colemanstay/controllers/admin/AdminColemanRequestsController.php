@@ -1,6 +1,7 @@
 <?php
 require_once _PS_MODULE_DIR_.'colemanstay/classes/ColemanRequest.php';
 require_once _PS_MODULE_DIR_.'colemanstay/classes/ColemanCalendar.php';
+require_once _PS_MODULE_DIR_.'colemanstay/classes/ColemanMessage.php';
 /** A focused host inbox using native employee authentication and permissions. */
 class AdminColemanRequestsController extends ModuleAdminController
 {
@@ -20,7 +21,7 @@ class AdminColemanRequestsController extends ModuleAdminController
     public function initProcess()
     {
         $view = Tools::getValue('view', 'requests');
-        if (is_string($view) && in_array($view, array('requests', 'calendar', 'settings'), true)) { $this->hostView = $view; }
+        if (is_string($view) && in_array($view, array('requests', 'calendar', 'settings', 'message'), true)) { $this->hostView = $view; }
         $this->action = '';
         $this->ajax = false;
         $filter = Tools::getValue('status', 'pending');
@@ -42,17 +43,30 @@ class AdminColemanRequestsController extends ModuleAdminController
         $id = $decision === 'unblocked' ? Tools::getValue('block_id') : Tools::getValue('request_id', Tools::getValue('id_product', ''));
         $revision = Tools::getValue('revision', '0');
         $this->formValues = array();
-        foreach (array('id_product', 'nightly_rate', 'monthly_rate', 'cleaning_fee', 'min_nights', 'max_guests', 'house_rules', 'owner_confirmed', 'arrival', 'departure', 'label') as $field) {
+        foreach (array('id_product', 'nightly_rate', 'monthly_rate', 'cleaning_fee', 'min_nights', 'max_guests', 'house_rules', 'owner_confirmed', 'arrival', 'departure', 'label', 'subject', 'body') as $field) {
             $value = Tools::getValue($field, '');
             $this->formValues[$field] = is_string($value) ? trim($value) : $value;
         }
         try {
             if (!is_string($id) || !ctype_digit($id) || (int)$id < 1 || !is_string($revision) || !ctype_digit($revision)
-                || !is_string($decision) || !in_array($decision, array('approved', 'declined', 'pending', 'reserved', 'released', 'settings_saved', 'blocked', 'unblocked'), true)) {
+                || !is_string($decision) || !in_array($decision, array('approved', 'declined', 'pending', 'reserved', 'released', 'settings_saved', 'blocked', 'unblocked', 'draft_saved', 'draft_download'), true)) {
                 throw new DomainException('invalid');
             }
             $actor = (int)$this->context->employee->id;
-            if ($decision === 'settings_saved') {
+            if ($decision === 'draft_saved' || $decision === 'draft_download') {
+                $kind = Tools::getValue('kind'); $requestRevision = Tools::getValue('request_revision');
+                if (!is_string($kind) || !is_string($requestRevision) || !ctype_digit($requestRevision)) { throw new DomainException('invalid'); }
+                if ($decision === 'draft_saved') {
+                    ColemanMessage::save((int)$id, $kind, (int)$requestRevision, (int)$revision, $this->formValues['subject'], $this->formValues['body'], $actor);
+                } else {
+                    $email = ColemanMessage::emailDraft((int)$id, $kind, (int)$requestRevision, (int)$revision);
+                    header('Cache-Control: no-store, private');
+                    header('Content-Type: message/rfc822');
+                    header('Content-Disposition: attachment; filename="coleman-'.(int)$id.'-'.$kind.'-draft.eml"');
+                    header('X-Content-Type-Options: nosniff');
+                    echo $email; exit;
+                }
+            } elseif ($decision === 'settings_saved') {
                 ColemanCalendar::saveUnit((int)$id, (int)$revision, $this->formValues, $actor);
             } elseif ($decision === 'blocked') {
                 ColemanCalendar::block((int)$id, $this->formValues['arrival'], $this->formValues['departure'], $this->formValues['label'], $actor);
@@ -66,6 +80,10 @@ class AdminColemanRequestsController extends ModuleAdminController
             }
         } catch (DomainException $error) {
             $messages = array(
+                'message_content' => $this->l('Enter a plain-text subject up to 180 characters and a message up to 10,000 characters. The subject must be a single line.'),
+                'missing_request' => $this->l('This request is not available. Return to the inbox.'),
+                'message_stale' => $this->l('The request changed. Reload this page and review its current status before saving or downloading a draft. Your entries are still below.'),
+                'draft_stale' => $this->l('The saved draft changed or needs review. Reload this page before saving or downloading it. Your entries are still below.'),
                 'invalid' => $this->l('This decision could not be saved. Refresh the inbox and try again.'),
                 'unit' => $this->l('Choose one of the two Coleman apartments.'),
                 'money' => $this->l('Enter a positive rent amount with up to two decimal places, or leave it blank. A cleaning fee may be zero.'),
@@ -79,7 +97,7 @@ class AdminColemanRequestsController extends ModuleAdminController
                 'confirm' => $this->l('Tick the confirmation box before reserving or releasing dates.'),
                 'stale' => $this->l('This request has changed or is no longer available. Review its current status before trying again.'),
             );
-            http_response_code(in_array($error->getMessage(), array('overlap', 'stale'), true) ? 409 : 400);
+            http_response_code(in_array($error->getMessage(), array('overlap', 'stale', 'message_stale', 'draft_stale'), true) ? 409 : 400);
             $this->errors[] = $messages[$error->getMessage()] ?? $messages['invalid'];
             return;
         } catch (Throwable $error) {
@@ -91,6 +109,7 @@ class AdminColemanRequestsController extends ModuleAdminController
         $this->context->cookie->coleman_notice = $decision;
         $this->context->cookie->write();
         $returnUrl = $this->context->link->getAdminLink('AdminColemanRequests').'&status='.$this->requestFilter.'&view='.$this->hostView;
+        if ($this->hostView === 'message') { $returnUrl .= '&request_id='.(int)$id; }
         if ($this->hostView === 'calendar') {
             $returnUrl .= '&id_product='.(int)Tools::getValue('id_product');
             $month = Tools::getValue('month');
@@ -135,7 +154,50 @@ class AdminColemanRequestsController extends ModuleAdminController
             'review_errors' => $this->errors, 'notice' => $notice,
             'status_labels' => array('pending' => $this->l('Pending'), 'approved' => $this->l('Approved'), 'reserved' => $this->l('Reserved'), 'declined' => $this->l('Declined'), 'all' => $this->l('All requests')),
         ));
-        if ($this->hostView !== 'requests') { $this->initApartmentContent(); }
+        if ($this->hostView === 'message') { $this->initMessageContent(); }
+        elseif ($this->hostView !== 'requests') { $this->initApartmentContent(); }
+    }
+
+    /** Build one editable reply using the current decision and preserve saved host wording. */
+    private function initMessageContent()
+    {
+        $id = Tools::getValue('request_id', '');
+        $request = null; $draft = null; $stale = false;
+        try {
+            if (!is_string($id) || !ctype_digit($id)) { throw new DomainException('missing_request'); }
+            $request = ColemanMessage::request((int)$id);
+            $request['reference'] = 'CD-'.str_pad($id, 5, '0', STR_PAD_LEFT);
+            $request['apartment_name'] = (int)$request['id_product'] === (int)Configuration::get('COLEMAN_PRODUCT_ONE') ? $this->l('Apartment One') : $this->l('Apartment Two');
+            if (in_array($request['status'], array('approved', 'declined', 'reserved'), true)) {
+                $draft = ColemanMessage::draft((int)$id, $request['status']);
+                $stale = $draft && (int)$draft['request_revision'] !== (int)$request['revision'];
+                if (!$draft) {
+                    $unit = $request['apartment_name'];
+                    $reference = $request['reference'];
+                    $intro = $request['status'] === 'approved' ? $this->l('We would like to follow up on your stay request. Your dates are not reserved yet. We will need to agree on the rental details before confirming a stay.')
+                        : ($request['status'] === 'declined' ? $this->l('Thank you for your interest in staying with us. We are unable to accept this request.')
+                        : $this->l('These dates have been reserved for your request in our private demo calendar. This is a test confirmation, not a rental agreement or payment receipt.'));
+                    $draft = array('revision' => 0, 'request_revision' => $request['revision'], 'updated_at' => null,
+                        'subject' => $this->l('560 Coleman private demo').' · '.$reference.' · '.($request['status'] === 'reserved' ? $this->l('Date confirmation') : $this->l('Your stay request')),
+                        'body' => sprintf($this->l('Hello %s,'), $request['guest_name'])."\n\n".$intro."\n\n".$unit."\n".
+                            sprintf($this->l('Check-in: %s'), $request['arrival'])."\n".sprintf($this->l('Check-out: %s'), $request['departure'])."\n".
+                            sprintf($this->l('Guests: %s'), $request['guests'])."\n".sprintf($this->l('Request: %s'), $reference)."\n\n".
+                            $this->l('This message is part of a private website test. No payment has been taken.')."\n\n".$this->l('The Coleman host'));
+                }
+            }
+        } catch (DomainException $error) { http_response_code(404); }
+        $failedEdit = $this->errors && Tools::getValue('decision') === 'draft_saved' && array_key_exists('subject', $this->formValues);
+        if ($draft) { $draft['request_revision'] = $request['revision']; }
+        if ($request && !$draft && $failedEdit) { $draft = array('revision' => 0, 'request_revision' => $request['revision'], 'updated_at' => null); }
+        if ($draft && $failedEdit) {
+            foreach (array('subject', 'body') as $field) { $draft[$field] = is_string($this->formValues[$field]) ? $this->formValues[$field] : ''; }
+            // Do not silently promote stale submissions to the latest revision.
+            foreach (array('revision', 'request_revision') as $field) {
+                $value = Tools::getValue($field); if (is_string($value) && ctype_digit($value)) { $draft[$field] = $value; }
+            }
+        }
+        $this->context->smarty->assign(array('message_request' => $request, 'message_draft' => $draft, 'message_stale' => $stale,
+            'message_downloadable' => $draft && $draft['revision'] && !$stale && !$this->errors));
     }
 
     /** Build the monthly calendar and optional rental details using the same host shell. */

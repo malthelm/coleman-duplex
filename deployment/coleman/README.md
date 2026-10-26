@@ -59,6 +59,7 @@ Run the focused review regression check inside an installed web container:
 ```sh
 php deployment/coleman/test-request-review.php
 php deployment/coleman/test-calendar.php
+php deployment/coleman/test-messages.php
 ```
 
 It shadows the request table with a connection-local temporary table and checks persistence, review transitions, stale submissions, CSRF, permissions, escaping and template rendering without changing live requests.
@@ -69,3 +70,12 @@ The calendar check uses connection-local temporary tables for rental settings, a
 **Calendar rollback:** rolling back to code before the calendar feature would stop enforcing its blocks and would not understand reserved requests. Prefer a forward fix. If rollback is necessary, first stop guest writes and preserve the current database/site; restore a matched backup only after reconciling any requests received since that backup. Never overwrite new guest data blindly.
 
 See [launch-status.md](launch-status.md) for the five-stage goal and owner decisions.
+
+
+## Guest-message drafts
+
+Reviewed requests have **Draft reply** (approved/declined) or **Draft confirmation** (reserved). The dedicated editor preserves host-written subjects and plain-text bodies, with a separate draft for each decision. Saving does not send anything. **Download saved email draft** exports a Unicode `.eml` attachment marked unsent, addressed to the request's guest. Email-app support for opening `.eml` as an editable draft varies; delivery is never claimed by this site.
+
+If the request or another host's draft changes, stale saves/downloads are rejected. Reopened/reapproved requests retain earlier wording but require review and another save before export. Local unsaved edits disable the download button; without JavaScript, download always uses the saved wording. Drafts and exports require the native host login, edit permission and CSRF token. Current defaults explicitly describe a private demo; confirmation drafts do not invent terms, prices or a rental agreement.
+
+The message regression check uses temporary request/draft tables and verifies persistence, stale conflicts, status changes, CSRF/permissions, plain-text escaping and MIME round-trip. Mail delivery remains disabled. Before an actual guest email is sent, obtain explicit authorization for its recipient and content through the chosen sending workflow.

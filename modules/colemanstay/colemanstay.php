@@ -3,6 +3,7 @@
 if (!defined('_PS_VERSION_')) { exit; }
 require_once __DIR__.'/classes/ColemanRequest.php';
 require_once __DIR__.'/classes/ColemanCalendar.php';
+require_once __DIR__.'/classes/ColemanMessage.php';
 
 /** A direct-request storefront for two apartments; no payment or reservation creation. */
 class ColemanStay extends Module
@@ -38,6 +39,7 @@ class ColemanStay extends Module
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4')) { return false; }
         $this->upgradeRequestReviewSchema();
         ColemanCalendar::installSchema();
+        ColemanMessage::installSchema();
         if (!Tab::getIdFromClassName('AdminColemanRequests')) {
             $tab = new Tab();
             $tab->class_name = 'AdminColemanRequests';

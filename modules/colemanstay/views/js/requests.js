@@ -17,3 +17,12 @@ document.querySelectorAll('.decision-form, .host-form').forEach(form => {
 });
 // Restore a fresh revision if the browser returns to a submitted page from history.
 window.addEventListener('pageshow', event => { if (event.persisted) { window.location.reload(); } });
+
+// A download always uses saved wording. Make local edits visible before export.
+const messageForm = document.querySelector('.message-form');
+if (messageForm) messageForm.addEventListener('input', () => {
+  const download = document.querySelector('.draft-export button');
+  const hint = document.getElementById('draft-save-hint');
+  if (download) download.disabled = true;
+  if (hint) hint.textContent = hint.dataset.unsaved;
+});

@@ -146,3 +146,23 @@ h3 { font-size: 14px; font-weight: 600; margin: 0 0 8px; }
   .calendar-grid td { height: 62px; }
   .calendar-entry { align-items: flex-start; flex-direction: column; gap: 16px; }
 }
+
+/* The message editor uses the same field and button styling as rental details. */
+.back-link { display: inline-block; margin-bottom: 32px; text-underline-offset: 4px; }
+.draft-link { display: inline-block; margin: 20px 0 0; font-weight: 600; text-underline-offset: 4px; }
+.message-layout { display: grid; grid-template-columns: minmax(0, 2fr) minmax(240px, 1fr); gap: 48px; }
+.message-layout h2 { font-size: 20px; margin: 0 0 24px; }
+.message-form label { margin-bottom: 24px; }
+.message-form textarea { min-height: 360px; line-height: 1.6; }
+.message-context { border-left: 1px solid var(--line); padding-left: 32px; overflow-wrap: anywhere; }
+.message-context dt { font-size: 14px; color: var(--text-secondary); margin-top: 24px; }
+.message-context dd { margin: 6px 0 0; }
+.draft-download { margin-top: 24px; padding-top: 24px; border-top: 1px solid var(--line); }
+@media (max-width: 700px) {
+  .message-layout { grid-template-columns: minmax(0, 1fr); gap: 32px; }
+  .message-context { grid-row: 1; border-left: 0; border-bottom: 1px solid var(--line); padding: 0 0 24px; }
+  .message-context dl { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 16px; }
+  .message-context dt { margin: 12px 0 0; }
+  .message-context dd { margin: 12px 0 0; }
+  .draft-download .button { width: 100%; }
+}
