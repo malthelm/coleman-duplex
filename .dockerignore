@@ -1,0 +1,6 @@
+.git
+.env
+.env.*
+config/settings.inc.php
+config/settings.old.php
+review

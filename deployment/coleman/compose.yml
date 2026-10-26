@@ -1,0 +1,47 @@
+services:
+  web:
+    image: coleman-duplex:demo-1
+    build:
+      context: ../..
+      dockerfile: deployment/coleman/Dockerfile
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:18090:80"
+    volumes:
+      - site:/var/www/html
+    environment:
+      DB_PASSWORD: ${DB_PASSWORD:?required}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:?required}
+      DEMO_DOMAIN: ${DEMO_DOMAIN:-winona.taila338b3.ts.net:8460}
+    depends_on:
+      db:
+        condition: service_healthy
+    cpus: 1.0
+    mem_limit: 512m
+    pids_limit: 128
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://127.0.0.1/modules/colemanstay/views/css/stay.css"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+  db:
+    image: mariadb:11.8
+    restart: unless-stopped
+    environment:
+      MARIADB_DATABASE: coleman
+      MARIADB_USER: coleman
+      MARIADB_PASSWORD: ${DB_PASSWORD:?required}
+      MARIADB_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:?required}
+    volumes:
+      - database:/var/lib/mysql
+    cpus: 0.75
+    mem_limit: 512m
+    pids_limit: 128
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+volumes:
+  site:
+  database:
